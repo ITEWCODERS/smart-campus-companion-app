@@ -5,6 +5,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smartcompanionapp.ui.screens.TaskScreen
+import com.example.unisync.ui.screens.DashboardScreen
+
 
 @Composable
 fun AppNavigation() {
@@ -12,10 +14,13 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = "tasks"
+        startDestination = "dash"
     ) {
         composable("tasks") {
             TaskScreen()
+        }
+        composable("dash") { //IGNORE, TESTING PURPOSES ONLY.
+            DashboardScreen()
         }
     }
 }
