@@ -29,47 +29,52 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SmartCompanionAppTheme {
-                val navController = rememberNavController()
-                
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "login",
-                        modifier = Modifier.padding(innerPadding)
-                    ) {
-                        composable("login") {
-                            LoginScreen(
-                                onLoginSuccess = { user ->
-                                    navController.navigate("home/${user.username}/${user.role}") {
-                                        popUpTo("login") { inclusive = true }
-                                    }
-                                },
-                                onNavigateToSignUp = {
-                                    navController.navigate("signup")
-                                }
-                            )
+                MainApp()
+            }
+        }
+    }
+}
+
+@Composable
+fun MainApp() {
+    val navController = rememberNavController()
+    
+    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "login",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("login") {
+                LoginScreen(
+                    onLoginSuccess = { user ->
+                        navController.navigate("home/${user.username}/${user.role}") {
+                            popUpTo("login") { inclusive = true }
                         }
-                        composable("signup") {
-                            SignUpScreen(
-                                onSignUpSuccess = {
-                                    navController.navigate("login") {
-                                        popUpTo("signup") { inclusive = true }
-                                    }
-                                },
-                                onNavigateToLogin = {
-                                    navController.navigate("login")
-                                }
-                            )
+                    },
+                    onNavigateToSignUp = {
+                        navController.navigate("signup")
+                    }
+                )
+            }
+            composable("signup") {
+                SignUpScreen(
+                    onSignUpSuccess = {
+                        navController.navigate("login") {
+                            popUpTo("signup") { inclusive = true }
                         }
-                        composable("home/{username}/{role}") { backStackEntry ->
-                            val username = backStackEntry.arguments?.getString("username") ?: ""
-                            val role = backStackEntry.arguments?.getString("role") ?: ""
-                            HomeScreen(username, role) {
-                                navController.navigate("login") {
-                                    popUpTo("home") { inclusive = true }
-                                }
-                            }
-                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate("login")
+                    }
+                )
+            }
+            composable("home/{username}/{role}") { backStackEntry ->
+                val username = backStackEntry.arguments?.getString("username") ?: ""
+                val role = backStackEntry.arguments?.getString("role") ?: ""
+                HomeScreen(username, role) {
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
                     }
                 }
             }
