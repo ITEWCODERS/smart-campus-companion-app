@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.smartcompanionapp.ui.theme.ActionEventsBg
 import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
 import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
@@ -44,11 +45,13 @@ import com.example.smartcompanionapp.ui.theme.UniSecondary
 // Note: Ensure Color.kt is in the same package, or import it here.
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(navController: NavController){
+    //added nav controller
     Scaffold(
         containerColor = AppBackground,
-        bottomBar = { CampusBottomNav() }
-    ) { paddingValues ->
+        bottomBar = { CampusBottomNav(navController) }
+    )
+    { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -331,23 +334,24 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
 }
 
 @Composable
-fun CampusBottomNav() {
+//added nav controller
+fun CampusBottomNav(navController: NavController) {
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+        // changed this one so we can go back to home
         // 1. Home
         NavigationBarItem(
             selected = true,
-            onClick = {},
+            onClick = { navController.navigate("dashboard") },
             icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            colors = NavigationBarItemDefaults.colors(indicatorColor = UniPrimary.copy(alpha = 0.1f))
+            label = { Text("Home") }
         )
 
 
-
+        //changed to nav controller to navigate
         // 2. Schedule
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = { navController.navigate("schedule") },
             icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
             label = { Text("Schedule") }
         )
@@ -381,6 +385,7 @@ fun CampusBottomNav() {
 @Composable
 fun DashboardPreview() {
     MaterialTheme {
-        DashboardScreen()
+        //commented to implement the nav controller to navigate between the screens
+//        DashboardScreen()
     }
 }

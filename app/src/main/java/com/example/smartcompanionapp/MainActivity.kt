@@ -3,8 +3,10 @@ package com.example.smartcompanionapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
+import androidx.navigation.compose.rememberNavController
 import com.example.smartcompanionapp.ui.theme.SmartCompanionAppTheme
-import com.example.smartcompanionapp.ui.navigation.AppNavigation
+import com.example.unisync.navigation.AppNavigation
 
 class MainActivity : ComponentActivity() {
 
@@ -12,7 +14,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SmartCompanionAppTheme {
-                AppNavigation()
+                // 1 Create NavController
+                val navController = rememberNavController()
+
+                // 2 Pass it to AppNavigation
+                AppNavigation(navController)
             }
         }
     }
