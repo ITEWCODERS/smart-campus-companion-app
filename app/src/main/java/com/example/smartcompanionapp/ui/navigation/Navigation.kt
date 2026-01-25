@@ -1,6 +1,7 @@
 package com.example.smartcompanionapp.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,10 +18,10 @@ fun AppNavigation() {
         startDestination = "dash"
     ) {
         composable("tasks") {
-            TaskScreen()
+            TaskScreen(navController = navController)
         }
         composable("dash") { //IGNORE, TESTING PURPOSES ONLY.
-            DashboardScreen()
+            DashboardScreen(navController = navController)
         }
     }
 }

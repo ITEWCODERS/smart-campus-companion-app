@@ -21,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.smartcompanionapp.ui.navigation.AppNavigation
 import com.example.smartcompanionapp.ui.theme.ActionEventsBg
 import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
 import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
@@ -44,10 +47,10 @@ import com.example.smartcompanionapp.ui.theme.UniSecondary
 // Note: Ensure Color.kt is in the same package, or import it here.
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(navController: NavController) {
     Scaffold(
         containerColor = AppBackground,
-        bottomBar = { CampusBottomNav() }
+        bottomBar = { CampusBottomNav(navController) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -331,7 +334,7 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
 }
 
 @Composable
-fun CampusBottomNav() {
+fun CampusBottomNav(navController: NavController) {
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
         // 1. Home
         NavigationBarItem(
@@ -342,8 +345,6 @@ fun CampusBottomNav() {
             colors = NavigationBarItemDefaults.colors(indicatorColor = UniPrimary.copy(alpha = 0.1f))
         )
 
-
-
         // 2. Schedule
         NavigationBarItem(
             selected = false,
@@ -352,12 +353,14 @@ fun CampusBottomNav() {
             label = { Text("Schedule") }
         )
 
-        // 3. Grades
+        // 3. Tasks
         NavigationBarItem(
             selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-            label = { Text("Grades") }
+            onClick = { navController.navigate("tasks") {
+                launchSingleTop = true
+            }},
+            icon = { Icon(Icons.Rounded.Task, contentDescription = "Academics") },
+            label = { Text("Tasks") }
         )
         // 4. Campus Info
         NavigationBarItem(
@@ -377,10 +380,10 @@ fun CampusBottomNav() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DashboardPreview() {
-    MaterialTheme {
-        DashboardScreen()
-    }
-}
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun DashboardPreview() {
+//    MaterialTheme {
+//        DashboardScreen()
+//    }
+//}
