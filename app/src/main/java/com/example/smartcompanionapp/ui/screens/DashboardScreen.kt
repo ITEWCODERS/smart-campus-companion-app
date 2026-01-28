@@ -1,4 +1,4 @@
-package com.example.unisync.ui.screens
+package com.example.smartcompanionapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,7 +41,7 @@ import com.example.smartcompanionapp.ui.theme.UniAccent
 import com.example.smartcompanionapp.ui.theme.UniPrimary
 import com.example.smartcompanionapp.ui.theme.UniSecondary
 
-// Note: Ensure Color.kt is in the same package, or import it here.
+
 
 @Composable
 fun DashboardScreen(navController: NavController){
@@ -366,7 +365,7 @@ fun CampusBottomNav(navController: NavController) {
         // 4. Campus Info
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = onInfoClick,
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Information") }
         )
@@ -387,5 +386,6 @@ fun DashboardPreview() {
     MaterialTheme {
         //commented to implement the nav controller to navigate between the screens
 //        DashboardScreen()
+        DashboardScreen(onNavigateToInfo = {})
     }
 }

@@ -4,8 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.unisync.ui.screens.DashboardScreen
-import com.example.unisync.ui.screens.ScheduleScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.smartcompanionapp.ui.screens.TaskScreen
+import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
+import com.example.smartcompanionapp.ui.screens.DashboardScreen
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
@@ -23,6 +25,21 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.Schedule.route) {
             ScheduleScreen(navController)
+
+        composable("dash") {
+            DashboardScreen(
+                onNavigateToInfo  = {
+                    navController.navigate("infoModule")
+                }
+            )
+        }
+
+        composable("infoModule") {
+            CampusInfoScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
