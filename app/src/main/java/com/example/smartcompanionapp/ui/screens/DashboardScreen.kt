@@ -44,10 +44,11 @@ import com.example.smartcompanionapp.ui.theme.UniSecondary
 // Note: Ensure Color.kt is in the same package, or import it here.
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen( onNavigateToInfo: () -> Unit) {
+
     Scaffold(
         containerColor = AppBackground,
-        bottomBar = { CampusBottomNav() }
+        bottomBar = { CampusBottomNav(onInfoClick = onNavigateToInfo) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -331,7 +332,8 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
 }
 
 @Composable
-fun CampusBottomNav() {
+fun CampusBottomNav(onInfoClick: () -> Unit) {
+
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
         // 1. Home
         NavigationBarItem(
@@ -341,8 +343,6 @@ fun CampusBottomNav() {
             label = { Text("Home") },
             colors = NavigationBarItemDefaults.colors(indicatorColor = UniPrimary.copy(alpha = 0.1f))
         )
-
-
 
         // 2. Schedule
         NavigationBarItem(
@@ -362,7 +362,7 @@ fun CampusBottomNav() {
         // 4. Campus Info
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = onInfoClick,
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Information") }
         )
@@ -381,6 +381,6 @@ fun CampusBottomNav() {
 @Composable
 fun DashboardPreview() {
     MaterialTheme {
-        DashboardScreen()
+        DashboardScreen(onNavigateToInfo = {})
     }
 }
