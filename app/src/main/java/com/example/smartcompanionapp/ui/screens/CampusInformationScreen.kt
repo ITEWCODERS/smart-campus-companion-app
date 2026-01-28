@@ -1,38 +1,40 @@
-package com.example.unisync.ui.screens
+package com.example.smartcompanionapp.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.smartcompanionapp.R
+// IF 'R' IS RED BELOW: Click on it and press Alt + Enter to import your specific project R file.
+// It usually looks like: import com.example.yourprojectname.R
 
-// 1. Simple Data Model (No Architecture needed)
+// 1. Data Model
 data class Department(
     val name: String,
     val acronym: String,
     val description: String,
     val email: String,
-    val phone: String
+    val phone: String,
+    val imageRes: Int
 )
 
 class MainActivity : ComponentActivity() {
@@ -48,43 +50,57 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampusInfoScreen( onBackClick: () -> Unit) {
-    // 2. Static Data defined directly inside the UI layer
+fun CampusInfoScreen(onBackClick: () -> Unit) {
+    // 2. Static Data
     val departments = listOf(
         Department(
             name = "College of Computing and Engineering",
             acronym = "CCE",
             description = "Developing globally competitive engineers and IT professionals.",
             email = "cce@pnc.edu.ph",
-            phone = "(049) 508-0111 loc 101"
+            phone = "(049) 508-0111 loc 101",
+            imageRes = R.drawable.cce
         ),
         Department(
             name = "College of Business, Accountancy, and Administration",
             acronym = "CBAA",
             description = "Producing business leaders and competent accountants.",
             email = "cbaa@pnc.edu.ph",
-            phone = "(049) 508-0111 loc 102"
+            phone = "(049) 508-0111 loc 102",
+            imageRes = R.drawable.cbaa
         ),
         Department(
-            name = "College of Education, Arts, and Sciences",
-            acronym = "CEAS",
+            name = "College of Arts, and Sciences",
+            acronym = "CAS",
             description = "Excellence in teacher education and liberal arts foundation.",
-            email = "ceas@pnc.edu.ph",
-            phone = "(049) 508-0111 loc 103"
+            email = "cas@pnc.edu.ph",
+            phone = "(049) 508-0111 loc 103",
+            imageRes = R.drawable.cas
         ),
         Department(
             name = "College of Health and Allied Sciences",
             acronym = "CHAS",
             description = "Nurturing healthcare professionals for community wellness.",
             email = "chas@pnc.edu.ph",
-            phone = "(049) 508-0111 loc 104"
+            phone = "(049) 508-0111 loc 104",
+            imageRes = R.drawable.chas
         ),
         Department(
-            name = "Institute of Computer Studies",
-            acronym = "ICS",
+            name = "College of Computing Studies",
+            acronym = "CCS",
             description = "Advancing knowledge in computer science and technology.",
-            email = "ics@pnc.edu.ph",
-            phone = "(049) 508-0111 loc 105"
+            email = "CCS@pnc.edu.ph",
+            phone = "(049) 508-0111 loc 105",
+            imageRes = R.drawable.ccs
+        ),
+
+        Department(
+            name = "College of Education",
+            acronym = "COE",
+            description = "Producing the country's finest educators.",
+            email = "COE@pnc.edu.ph",
+            phone = "(049) 508-0111 loc 105",
+            imageRes = R.drawable.coe
         )
     )
 
@@ -92,7 +108,6 @@ fun CampusInfoScreen( onBackClick: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("Campus Information") },
-                // 👇 ADD THIS BLOCK STARTING HERE
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -102,14 +117,13 @@ fun CampusInfoScreen( onBackClick: () -> Unit) {
                         )
                     }
                 },
-                // 👆 END OF NEW BLOCK
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF006400),
                     titleContentColor = Color.White
                 )
             )
         },
-        containerColor = Color(0xFFF0F0F0) // Light gray background
+        containerColor = Color(0xFFF0F0F0)
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -134,28 +148,16 @@ fun DepartmentCardUI(department: Department) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            // --- IMAGE PLACEHOLDER ---
-            Box(
+            // 3. FIXED IMAGE COMPOSABLE
+            Image(
+                // 🔴 THE FIX WAS HERE: Use 'department.imageRes', not just 'department'
+                painter = painterResource(id = department.imageRes),
+                contentDescription = "${department.acronym} Building",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp)
-                    .background(Color(0xFFE0E0E0)), // Placeholder Gray
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.Image,
-                        contentDescription = "Placeholder",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Text(
-                        text = "Department Image",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                }
-            }
+            )
 
             // --- CONTENT ---
             Column(modifier = Modifier.padding(16.dp)) {
@@ -167,7 +169,7 @@ fun DepartmentCardUI(department: Department) {
                     Text(
                         text = department.acronym,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Color(0xFF006400), // PnC Green
+                        color = Color(0xFF006400),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -189,7 +191,6 @@ fun DepartmentCardUI(department: Department) {
                 HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Contact Section
                 ContactLine(icon = Icons.Default.Email, text = department.email)
                 Spacer(modifier = Modifier.height(8.dp))
                 ContactLine(icon = Icons.Default.Call, text = department.phone)

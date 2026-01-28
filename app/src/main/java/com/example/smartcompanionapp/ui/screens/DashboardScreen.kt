@@ -1,4 +1,4 @@
-package com.example.unisync.ui.screens
+package com.example.smartcompanionapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,19 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smartcompanionapp.ui.theme.ActionEventsBg
-import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
-import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
-import com.example.smartcompanionapp.ui.theme.ActionLibraryIcon
-import com.example.smartcompanionapp.ui.theme.ActionMapBg
-import com.example.smartcompanionapp.ui.theme.ActionMapIcon
-import com.example.smartcompanionapp.ui.theme.ActionShuttleBg
-import com.example.smartcompanionapp.ui.theme.ActionShuttleIcon
 import com.example.smartcompanionapp.ui.theme.AlertBg
 import com.example.smartcompanionapp.ui.theme.AlertText
 import com.example.smartcompanionapp.ui.theme.AppBackground

@@ -5,8 +5,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smartcompanionapp.ui.screens.TaskScreen
-import com.example.unisync.ui.screens.CampusInfoScreen
-import com.example.unisync.ui.screens.DashboardScreen
+import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
+import com.example.smartcompanionapp.ui.screens.DashboardScreen
 
 
 @Composable
