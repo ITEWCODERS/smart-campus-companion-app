@@ -38,12 +38,12 @@ fun TaskTopBar(onBackClick: () -> Unit) {
 
 @Composable
 fun TaskScreen(navController: NavController) {
-
+    //Static list of tasks
     val tasks = remember {
         mutableStateListOf(
-            Task("Finish Android Assignment", "Today, 11:59 PM"),
-            Task("Prepare for Exam", "Jan 22, 10:00 AM"),
-            Task("Submit Project Report", "Jan 25, 5:00 PM")
+            Task("Finish Assignment 1", "Today, 11:59 PM"),
+            Task("Prepare for Exam", "Feb 4, 10:00 AM"),
+            Task("Submit Project for APPDEV", "Jan 25, 5:00 PM")
         )
     }
 
@@ -60,7 +60,7 @@ fun TaskScreen(navController: NavController) {
             }
         }
     ) { paddingValues ->
-
+        //List of tasks
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,6 +73,7 @@ fun TaskScreen(navController: NavController) {
                 TaskCard(
                     task = task,
                     onDelete = {
+                        //Deletes a selected task
                         tasks.remove(task)
                     },
                     onEdit = {
@@ -91,7 +92,7 @@ fun TaskCard(
     onEdit: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-
+    //Card for tasks
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -126,7 +127,7 @@ fun TaskCard(
                     color = TextSecondary
                 )
             }
-
+            //Buttons for Edit & Delete
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
