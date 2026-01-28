@@ -21,19 +21,18 @@ fun AppNavigation() {
             TaskScreen()
         }
 
-        composable("dash") { //IGNORE, TESTING PURPOSES ONLY.
+        composable("dash") {
             DashboardScreen(
-                // Assuming you added back button logic to CampusInfoScreen
                 onNavigateToInfo  = {
                     navController.navigate("infoModule")
                 }
             )
         }
 
-        composable("infoModule") { //IGNORE, TESTING PURPOSES ONLY.
+        composable("infoModule") {
             CampusInfoScreen(
                 onBackClick = {
-                    navController.popBackStack() // <--- This makes the button work
+                    navController.popBackStack()
                 }
             )
         }
