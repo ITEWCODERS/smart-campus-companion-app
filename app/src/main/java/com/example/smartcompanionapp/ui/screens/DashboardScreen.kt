@@ -1,4 +1,4 @@
-package com.example.unisync.ui.screens
+package com.example.smartcompanionapp.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,19 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.smartcompanionapp.ui.theme.ActionEventsBg
-import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
-import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
-import com.example.smartcompanionapp.ui.theme.ActionLibraryIcon
-import com.example.smartcompanionapp.ui.theme.ActionMapBg
-import com.example.smartcompanionapp.ui.theme.ActionMapIcon
-import com.example.smartcompanionapp.ui.theme.ActionShuttleBg
-import com.example.smartcompanionapp.ui.theme.ActionShuttleIcon
 import com.example.smartcompanionapp.ui.theme.AlertBg
 import com.example.smartcompanionapp.ui.theme.AlertText
 import com.example.smartcompanionapp.ui.theme.AppBackground
@@ -41,13 +32,14 @@ import com.example.smartcompanionapp.ui.theme.UniAccent
 import com.example.smartcompanionapp.ui.theme.UniPrimary
 import com.example.smartcompanionapp.ui.theme.UniSecondary
 
-// Note: Ensure Color.kt is in the same package, or import it here.
+
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen( onNavigateToInfo: () -> Unit) {
+
     Scaffold(
         containerColor = AppBackground,
-        bottomBar = { CampusBottomNav() }
+        bottomBar = { CampusBottomNav(onInfoClick = onNavigateToInfo) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -331,7 +323,8 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
 }
 
 @Composable
-fun CampusBottomNav() {
+fun CampusBottomNav(onInfoClick: () -> Unit) {
+
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
         // 1. Home
         NavigationBarItem(
@@ -341,8 +334,6 @@ fun CampusBottomNav() {
             label = { Text("Home") },
             colors = NavigationBarItemDefaults.colors(indicatorColor = UniPrimary.copy(alpha = 0.1f))
         )
-
-
 
         // 2. Schedule
         NavigationBarItem(
@@ -362,7 +353,7 @@ fun CampusBottomNav() {
         // 4. Campus Info
         NavigationBarItem(
             selected = false,
-            onClick = {},
+            onClick = onInfoClick,
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Information") }
         )
@@ -381,6 +372,6 @@ fun CampusBottomNav() {
 @Composable
 fun DashboardPreview() {
     MaterialTheme {
-        DashboardScreen()
+        DashboardScreen(onNavigateToInfo = {})
     }
 }

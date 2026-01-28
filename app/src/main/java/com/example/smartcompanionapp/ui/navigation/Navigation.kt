@@ -5,7 +5,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.smartcompanionapp.ui.screens.TaskScreen
-import com.example.unisync.ui.screens.DashboardScreen
+import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
+import com.example.smartcompanionapp.ui.screens.DashboardScreen
 
 
 @Composable
@@ -19,8 +20,21 @@ fun AppNavigation() {
         composable("tasks") {
             TaskScreen()
         }
-        composable("dash") { //IGNORE, TESTING PURPOSES ONLY.
-            DashboardScreen()
+
+        composable("dash") {
+            DashboardScreen(
+                onNavigateToInfo  = {
+                    navController.navigate("infoModule")
+                }
+            )
+        }
+
+        composable("infoModule") {
+            CampusInfoScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
