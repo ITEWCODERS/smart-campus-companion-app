@@ -365,7 +365,7 @@ fun CampusBottomNav(navController: NavController) {
         // 4. Campus Info
         NavigationBarItem(
             selected = false,
-            onClick = onInfoClick,
+            onClick = { navController.navigate("campusInfo") },
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Information") }
         )
@@ -380,12 +380,3 @@ fun CampusBottomNav(navController: NavController) {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DashboardPreview() {
-    MaterialTheme {
-        //commented to implement the nav controller to navigate between the screens
-//        DashboardScreen()
-        DashboardScreen(onNavigateToInfo = {})
-    }
-}
