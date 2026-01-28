@@ -8,24 +8,39 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = BrandBlue,
+    secondary = BrandBlueDark,
+    tertiary = DeadlineOrange,
+    background = Color(0xFF121212),
+    surface = Color(0xFF121212),
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = Color.White,
+    onSurface = Color.White,
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = BrandBlue,
+    secondary = BrandBlueDark,
+    tertiary = DeadlineOrange,
+    background = BackgroundSoft,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onSecondary = Color.White,
+    onTertiary = Color.White,
+    onBackground = TextBlack,
+    onSurface = TextBlack,
 )
 
 @Composable
 fun SmartCompanionAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Disabled dynamic color to strictly follow your requested theme
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
