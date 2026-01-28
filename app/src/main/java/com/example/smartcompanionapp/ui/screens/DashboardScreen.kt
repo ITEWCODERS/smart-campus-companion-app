@@ -41,7 +41,7 @@ import com.example.smartcompanionapp.ui.theme.UniAccent
 import com.example.smartcompanionapp.ui.theme.UniPrimary
 import com.example.smartcompanionapp.ui.theme.UniSecondary
 
-// Note: Ensure Color.kt is in the same package, or import it here.
+
 
 @Composable
 fun DashboardScreen( onNavigateToInfo: () -> Unit) {
