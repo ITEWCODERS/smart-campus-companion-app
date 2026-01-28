@@ -20,15 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.example.smartcompanionapp.ui.theme.ActionEventsBg
-import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
-import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
-import com.example.smartcompanionapp.ui.theme.ActionLibraryIcon
-import com.example.smartcompanionapp.ui.theme.ActionMapBg
-import com.example.smartcompanionapp.ui.theme.ActionMapIcon
-import com.example.smartcompanionapp.ui.theme.ActionShuttleBg
-import com.example.smartcompanionapp.ui.theme.ActionShuttleIcon
 import com.example.smartcompanionapp.ui.theme.AlertBg
 import com.example.smartcompanionapp.ui.theme.AlertText
 import com.example.smartcompanionapp.ui.theme.AppBackground
@@ -44,13 +35,12 @@ import com.example.smartcompanionapp.ui.theme.UniSecondary
 
 
 @Composable
-fun DashboardScreen(navController: NavController){
-    //added nav controller
+fun DashboardScreen( onNavigateToInfo: () -> Unit) {
+
     Scaffold(
         containerColor = AppBackground,
-        bottomBar = { CampusBottomNav(navController) }
-    )
-    { paddingValues ->
+        bottomBar = { CampusBottomNav(onInfoClick = onNavigateToInfo) }
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -333,24 +323,22 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
 }
 
 @Composable
-//added nav controller
-fun CampusBottomNav(navController: NavController) {
+fun CampusBottomNav(onInfoClick: () -> Unit) {
+
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // changed this one so we can go back to home
         // 1. Home
         NavigationBarItem(
             selected = true,
-            onClick = { navController.navigate("dashboard") },
+            onClick = {},
             icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-            label = { Text("Home") }
+            label = { Text("Home") },
+            colors = NavigationBarItemDefaults.colors(indicatorColor = UniPrimary.copy(alpha = 0.1f))
         )
 
-
-        //changed to nav controller to navigate
         // 2. Schedule
         NavigationBarItem(
             selected = false,
-            onClick = { navController.navigate("schedule") },
+            onClick = {},
             icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
             label = { Text("Schedule") }
         )
@@ -384,8 +372,6 @@ fun CampusBottomNav(navController: NavController) {
 @Composable
 fun DashboardPreview() {
     MaterialTheme {
-        //commented to implement the nav controller to navigate between the screens
-//        DashboardScreen()
         DashboardScreen(onNavigateToInfo = {})
     }
 }

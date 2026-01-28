@@ -1,7 +1,6 @@
-package com.example.unisync.navigation
+package com.example.smartcompanionapp.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -9,22 +8,18 @@ import com.example.smartcompanionapp.ui.screens.TaskScreen
 import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
 import com.example.smartcompanionapp.ui.screens.DashboardScreen
 
-sealed class Screen(val route: String) {
-    object Dashboard : Screen("dashboard")
-    object Schedule : Screen("schedule")
-}
 
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation() {
+    val navController = rememberNavController()
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Dashboard.route
+        startDestination = "dash"
     ) {
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(navController)
+        composable("tasks") {
+            TaskScreen()
         }
-        composable(Screen.Schedule.route) {
-            ScheduleScreen(navController)
 
         composable("dash") {
             DashboardScreen(
