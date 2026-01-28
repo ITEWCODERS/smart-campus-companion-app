@@ -6,44 +6,28 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.model.Task
-import com.example.smartcompanionapp.ui.theme.AppBackground
-
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AddTask
-import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material3.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import com.example.smartcompanionapp.ui.theme.AppSurface
-import com.example.smartcompanionapp.ui.theme.TextPrimary
-import com.example.smartcompanionapp.ui.theme.TextSecondary
-import com.example.smartcompanionapp.ui.theme.UniAccent
+import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskTopBar(onBackClick: () -> Unit) {
     TopAppBar(
-        title = {
-            Text(
-                text = "Tasks",
-                style = MaterialTheme.typography.titleLarge
-            )
-        },
+        title = { Text("Tasks", style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Rounded.ArrowBack,
-                    contentDescription = "Back"
-                )
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
@@ -55,33 +39,26 @@ fun TaskTopBar(onBackClick: () -> Unit) {
 @Composable
 fun TaskScreen(navController: NavController) {
 
-    val tasks = listOf(
-        Task("Finish Android Assignment", "Today, 11:59 PM"),
-        Task("Prepare for Exam", "Jan 22, 10:00 AM"),
-        Task("Submit Project Report", "Jan 25, 5:00 PM")
-    )
+    val tasks = remember {
+        mutableStateListOf(
+            Task("Finish Android Assignment", "Today, 11:59 PM"),
+            Task("Prepare for Exam", "Jan 22, 10:00 AM"),
+            Task("Submit Project Report", "Jan 25, 5:00 PM")
+        )
+    }
+
 
     Scaffold(
-        topBar = {
-            TaskTopBar(
-                onBackClick = { navController.popBackStack() }
-            )
-        },
+        topBar = { TaskTopBar { navController.popBackStack() } },
         containerColor = AppBackground,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* Do Nothing for now */ },
-                containerColor = MaterialTheme.colorScheme.primary,
-                shape = CircleShape,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                onClick = { },
+                shape = CircleShape
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.AddTask,
-                    contentDescription = "Add Task"
-                )
+                Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
             }
-        },
-        floatingActionButtonPosition = FabPosition.End
+        }
     ) { paddingValues ->
 
         LazyColumn(
@@ -93,15 +70,28 @@ fun TaskScreen(navController: NavController) {
             contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
         ) {
             items(tasks) { task ->
-                TaskCard(task)
+                TaskCard(
+                    task = task,
+                    onDelete = {
+                        tasks.remove(task)
+                    },
+                    onEdit = {
+                        // No function yet
+                    }
+                )
             }
         }
     }
 }
 
-
 @Composable
-fun TaskCard(task: Task) {
+fun TaskCard(
+    task: Task,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -113,7 +103,6 @@ fun TaskCard(task: Task) {
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // Status indicator
             Box(
                 modifier = Modifier
                     .size(10.dp)
@@ -130,9 +119,7 @@ fun TaskCard(task: Task) {
                     color = TextPrimary,
                     fontWeight = FontWeight.SemiBold
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     text = "Due: ${task.dueDate}",
                     style = MaterialTheme.typography.bodySmall,
@@ -140,26 +127,38 @@ fun TaskCard(task: Task) {
                 )
             }
 
-            Icon(
-                imageVector = Icons.Rounded.ChevronRight,
-                contentDescription = null,
-                tint = TextSecondary
-            )
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Edit") },
+                        onClick = {
+                            menuExpanded = false
+                            onEdit()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Rounded.Edit, contentDescription = null)
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text("Delete") },
+                        onClick = {
+                            menuExpanded = false
+                            onDelete()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Rounded.Delete, contentDescription = null)
+                        }
+                    )
+                }
+            }
         }
     }
 }
-
-
-//
-//@Composable
-//fun TaskItem(task: Task) {
-//    Card(
-//        modifier = Modifier.fillMaxWidth(),
-//        elevation = CardDefaults.cardElevation(4.dp)
-//    ) {
-//        Column(modifier = Modifier.padding(16.dp)) {
-//            Text(text = task.title, style = MaterialTheme.typography.titleMedium)
-//            Text(text = "Due: ${task.dueDate}", style = MaterialTheme.typography.bodySmall)
-//        }
-//    }
-//}
