@@ -7,12 +7,14 @@ import androidx.navigation.compose.composable
 import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
 import com.example.smartcompanionapp.ui.screens.DashboardScreen
 import com.example.smartcompanionapp.ui.screens.ScheduleScreen
+import com.example.smartcompanionapp.ui.screens.TaskScreen
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Schedule : Screen("schedule")
 
     object CampusInformation : Screen("campusInfo")
+    object Task : Screen("task")
 
 }
 
@@ -30,6 +32,9 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.CampusInformation.route) {
             CampusInfoScreen(navController)
+        }
+        composable(Screen.Task.route){
+            TaskScreen(navController)
         }
     }
 }
