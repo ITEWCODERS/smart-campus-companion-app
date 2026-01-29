@@ -356,7 +356,7 @@ fun CampusBottomNav(navController: NavController) {
         // 3. Tasks
         NavigationBarItem(
             selected = false,
-            onClick = { navController.navigate("task") {
+            onClick = { navController.navigate("tasks") {
                 launchSingleTop = true
             }},
             icon = { Icon(Icons.Rounded.Task, contentDescription = "Academics") },
