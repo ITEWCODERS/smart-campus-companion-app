@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.ui.screens
+package com.example.smartcompanionapp
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
