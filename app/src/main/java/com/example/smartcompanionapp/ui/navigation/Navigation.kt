@@ -4,15 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
-import com.example.smartcompanionapp.ui.screens.DashboardScreen
-import com.example.smartcompanionapp.ui.screens.ScheduleScreen
+import com.example.smartcompanionapp.ui.screens.TaskScreen
+import com.example.unisync.ui.screens.DashboardScreen
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Schedule : Screen("schedule")
 
     object CampusInformation : Screen("campusInfo")
+    object Task : Screen("task")
 
 }
 
@@ -25,11 +25,10 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Dashboard.route) {
             DashboardScreen(navController)
         }
-        composable(Screen.Schedule.route) {
-            ScheduleScreen(navController)
+
+        composable(Screen.Task.route){
+            TaskScreen(navController)
         }
-        composable(Screen.CampusInformation.route) {
-            CampusInfoScreen(navController)
-        }
+
     }
 }
