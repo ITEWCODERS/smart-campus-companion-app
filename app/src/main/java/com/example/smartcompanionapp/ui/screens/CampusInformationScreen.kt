@@ -114,7 +114,7 @@ fun CampusInfoScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF006400),
+                    containerColor = Color(0xFFF0F0F0),
                     titleContentColor = Color.White
                 )
             )

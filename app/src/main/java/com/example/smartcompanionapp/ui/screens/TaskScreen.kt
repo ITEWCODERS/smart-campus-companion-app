@@ -13,7 +13,6 @@ import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Task
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -27,75 +26,28 @@ import com.example.smartcompanionapp.ui.theme.AppSurface
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.model.Task
 import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(navController: NavController) {
-    val tasks = listOf(
-        Task("Finish Android Assignment", "Jan 20"),
-        Task("Prepare for Exam", "Jan 22"),
-        Task("Submit Project Report", "Jan 25")
-    )
-}
-
-    Scaffold(
-        bottomBar = { BottomNavWithController(navController) },
-        containerColor = Color(0xFFF0F0F0)
-    ) { innerPadding ->
-
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Tasks",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+    // 2. FIX: Use 'mutableStateListOf' so the UI updates when you remove an item
+    val tasks = remember {
+        mutableStateListOf(
+            Task("Finish Android Assignment", "Jan 20"),
+            Task("Prepare for Exam", "Jan 22"),
+            Task("Submit Project Report", "Jan 25")
         )
     }
 
 
     Scaffold(
-        topBar = { TaskTopBar { navController.popBackStack() } },
-        containerColor = AppBackground,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { },
-                shape = CircleShape
-            ) {
-                Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
-            }
-        }
+        bottomBar = { BottomNavWithController(navController) },
+        containerColor = Color(0xFFF0F0F0)
     ) { paddingValues ->
-        //List of tasks
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
-        ) {
-            items(tasks) { task ->
-                TaskCard(
-                    task = task,
-                    onDelete = {
-                        //Deletes a selected task
-                        tasks.remove(task)
-                    },
-                    onEdit = {
-                        // No function yet
-                    }
-                )
-            }
-        }
     }
 }
+
 
 @Composable
 fun TaskCard(
