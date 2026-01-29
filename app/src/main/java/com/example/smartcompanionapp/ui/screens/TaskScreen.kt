@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Home
@@ -22,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.smartcompanionapp.model.Task
 import com.example.smartcompanionapp.ui.theme.AppSurface
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -32,33 +30,30 @@ import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskScreen(navController: NavController) {
-    val tasks = listOf(
-        Task("Finish Android Assignment", "Jan 20"),
-        Task("Prepare for Exam", "Jan 22"),
-        Task("Submit Project Report", "Jan 25")
+fun TaskTopBar(onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Tasks", style = MaterialTheme.typography.titleLarge) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = AppBackground
+        )
     )
 }
 
-    Scaffold(
-        bottomBar = { BottomNavWithController(navController) },
-        containerColor = Color(0xFFF0F0F0)
-    ) { innerPadding ->
-
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Tasks",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+@Composable
+fun TaskScreen(navController: NavController) {
+    //Static list of tasks
+    val tasks = remember {
+        mutableStateListOf(
+            Task("Finish Assignment 1", "Today, 11:59 PM"),
+            Task("Prepare for Exam", "Feb 4, 10:00 AM"),
+            Task("Submit Project for APPDEV", "Jan 25, 5:00 PM")
         )
     }
-
 
     Scaffold(
         topBar = { TaskTopBar { navController.popBackStack() } },
