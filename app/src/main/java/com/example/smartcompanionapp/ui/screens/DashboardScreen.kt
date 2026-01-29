@@ -362,20 +362,20 @@ fun CampusBottomNav(navController: NavController) {
             icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
             label = { Text("Grades") }
         )
-        // 4. Campus Info
+        // 4. Task
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("task") },
+            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
+            label = { Text("Task") }
+        )
+
+        // 5. Campus Info
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("campusInfo") },
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
-            label = { Text("Information") }
-        )
-
-        // 5. Settings
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") }
+            label = { Text("Info") }
         )
     }
 }

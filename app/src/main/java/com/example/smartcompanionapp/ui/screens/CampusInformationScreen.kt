@@ -12,6 +12,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Task
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.R
+import com.example.smartcompanionapp.ui.theme.AppSurface
 
 data class Department(
     val name: String,
@@ -112,7 +118,8 @@ fun CampusInfoScreen(navController: NavController) {
                     titleContentColor = Color.White
                 )
             )
-        },
+        } ,
+        bottomBar = { BottomNavWithController(navController) },
         containerColor = Color(0xFFF0F0F0)
     ) { innerPadding ->
         LazyColumn(
@@ -203,5 +210,53 @@ fun ContactLine(icon: ImageVector, text: String) {
             color = Color.Black
         )
     }
+}
+
+@Composable
+fun BottomInfoNavWithController(navController: NavController) {
+    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+        // 1. Home
+        NavigationBarItem(
+            selected = true,
+            onClick = { navController.navigate("dashboard") },
+            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
+            label = { Text("Home") }
+        )
+
+
+        //changed to nav controller to navigate
+        // 2. Schedule
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("schedule") },
+            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
+            label = { Text("Schedule") }
+        )
+
+        // 3. Grades
+        NavigationBarItem(
+            selected = false,
+            onClick = {},
+            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
+            label = { Text("Grades") }
+        )
+        // 4. Task
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("task") },
+            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
+            label = { Text("Task") }
+        )
+
+        // 5. Campus Info
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("campusInfo") },
+            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
+            label = { Text("Info") }
+        )
+    }
+
+
 }
 

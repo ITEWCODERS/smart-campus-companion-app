@@ -214,35 +214,45 @@ fun NoTasksPlaceholder() {
 @Composable
 fun BottomNavWithController(navController: NavController) {
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+        // 1. Home
         NavigationBarItem(
-            selected = false,
+            selected = true,
             onClick = { navController.navigate("dashboard") },
             icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
             label = { Text("Home") }
         )
+
+
+        //changed to nav controller to navigate
+        // 2. Schedule
         NavigationBarItem(
-            selected = true,
+            selected = false,
             onClick = { navController.navigate("schedule") },
             icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
             label = { Text("Schedule") }
         )
+
+        // 3. Grades
         NavigationBarItem(
             selected = false,
-            onClick = { /* TODO: navigate to grades */ },
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Grades") },
+            onClick = {},
+            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
             label = { Text("Grades") }
         )
+        // 4. Task
         NavigationBarItem(
             selected = false,
-            onClick = { /* TODO: navigate to info */ },
-            icon = { Icon(Icons.Rounded.Info, contentDescription = "Information") },
-            label = { Text("Information") }
+            onClick = { navController.navigate("task") },
+            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
+            label = { Text("Task") }
         )
+
+        // 5. Campus Info
         NavigationBarItem(
             selected = false,
-            onClick = { /* TODO: navigate to settings */ },
-            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") }
+            onClick = { navController.navigate("campusInfo") },
+            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
+            label = { Text("Info") }
         )
     }
 }
