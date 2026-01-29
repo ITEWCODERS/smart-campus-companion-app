@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.model.Task
+import com.example.smartcompanionapp.model.Tasks
 import com.example.smartcompanionapp.ui.theme.*
 
 /**
@@ -35,10 +35,10 @@ fun ScheduleScreen(navController: NavController) {
     // Sample tasks (in production, this should come from a repository / ViewModel)
     val tasks = remember {
         listOf(
-            Task("Physics Lab", "10:00 AM", "20"),
-            Task("Data Structures", "1:00 PM", "21"),
-            Task("Group Meeting", "3:30 PM", "22"),
-            Task("Math Quiz", "9:00 AM", "23")
+            Tasks("Physics Lab", "10:00 AM", "20"),
+            Tasks("Data Structures", "1:00 PM", "21"),
+            Tasks("Group Meeting", "3:30 PM", "22"),
+            Tasks("Math Quiz", "9:00 AM", "23")
         )
     }
 
@@ -73,7 +73,7 @@ fun ScheduleScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Filter tasks by selected day
-            val filteredTasks = tasks.filter { it.day == selectedDay }
+            val filteredTasks = tasks.filter { it.date == selectedDay }
 
             if (filteredTasks.isEmpty()) {
                 NoTasksPlaceholder()
@@ -159,7 +159,7 @@ fun CalendarDay(day: String, isSelected: Boolean, onClick: () -> Unit) {
 
 /** LazyColumn for displaying a list of tasks */
 @Composable
-fun TaskList(tasks: List<Task>) {
+fun TaskList(tasks: List<Tasks>) {
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -173,7 +173,7 @@ fun TaskList(tasks: List<Task>) {
 
 /** Card representing a single task */
 @Composable
-fun ScheduleCard(task: Task) {
+fun ScheduleCard(task: Tasks) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
