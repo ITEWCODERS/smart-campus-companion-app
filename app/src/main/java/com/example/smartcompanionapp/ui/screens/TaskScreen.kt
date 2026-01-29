@@ -4,50 +4,86 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.School
-import androidx.compose.material.icons.rounded.Task
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.example.smartcompanionapp.model.Task
-import com.example.smartcompanionapp.ui.theme.AppSurface
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.smartcompanionapp.model.Task
 import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun TaskTopBar(onBackClick: () -> Unit) {
+    TopAppBar(
+        title = { Text("Tasks", style = MaterialTheme.typography.titleLarge) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = AppBackground
+        )
+    )
+}
+
+@Composable
 fun TaskScreen(navController: NavController) {
-    // 2. FIX: Use 'mutableStateListOf' so the UI updates when you remove an item
+    //Static list of tasks
     val tasks = remember {
         mutableStateListOf(
-            Task("Finish Android Assignment", "Jan 20"),
-            Task("Prepare for Exam", "Jan 22"),
-            Task("Submit Project Report", "Jan 25")
+            Task("Finish Assignment 1", "Today, 11:59 PM"),
+            Task("Prepare for Exam", "Feb 4, 10:00 AM"),
+            Task("Submit Project for APPDEV", "Jan 25, 5:00 PM")
         )
     }
 
 
     Scaffold(
-        bottomBar = { BottomNavWithController(navController) },
-        containerColor = Color(0xFFF0F0F0)
+        topBar = { TaskTopBar { navController.popBackStack() } }, bottomBar = { BottomNavWithController(navController) },
+        containerColor = AppBackground,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { },
+                shape = CircleShape
+            ) {
+                Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
+            }
+        }
     ) { paddingValues ->
+        //List of tasks
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+        ) {
+            items(tasks) { task ->
+                TaskCard(
+                    task = task,
+                    onDelete = {
+                        //Deletes a selected task
+                        tasks.remove(task)
+                    },
+                    onEdit = {
+                        // No function yet
+                    }
+                )
+            }
+        }
     }
 }
-
 
 @Composable
 fun TaskCard(
