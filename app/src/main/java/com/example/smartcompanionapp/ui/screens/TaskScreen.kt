@@ -1,5 +1,6 @@
 package com.example.smartcompanionapp.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,15 +11,26 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Task
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.example.smartcompanionapp.model.Task
 import com.example.smartcompanionapp.ui.theme.AppSurface
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavController
+import com.example.smartcompanionapp.model.Task
+import com.example.smartcompanionapp.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(navController: NavController) {
     val tasks = listOf(
@@ -26,6 +38,7 @@ fun TaskScreen(navController: NavController) {
         Task("Prepare for Exam", "Jan 22"),
         Task("Submit Project Report", "Jan 25")
     )
+}
 
     Scaffold(
         bottomBar = { BottomNavWithController(navController) },
@@ -44,117 +57,121 @@ fun TaskScreen(navController: NavController) {
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
+    }
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+    Scaffold(
+        topBar = { TaskTopBar { navController.popBackStack() } },
+        containerColor = AppBackground,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { },
+                shape = CircleShape
+            ) {
+                Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
+            }
+        }
+    ) { paddingValues ->
+        //List of tasks
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+        ) {
             items(tasks) { task ->
-                TaskItem(task)
+                TaskCard(
+                    task = task,
+                    onDelete = {
+                        //Deletes a selected task
+                        tasks.remove(task)
+                    },
+                    onEdit = {
+                        // No function yet
+                    }
+                )
             }
         }
     }
 }
 
-
 @Composable
-fun TaskItem(task: Task) {
+fun TaskCard(
+    task: Task,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    //Card for tasks
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = AppSurface),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = task.title, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Due: ${task.dueDate}", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-@Composable
-fun BottomTaskNavWithController(navController: NavController) {
-    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // 1. Home
-        NavigationBarItem(
-            selected = true,
-            onClick = { navController.navigate("dashboard") },
-            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-            label = { Text("Home") }
-        )
-
-
-        //changed to nav controller to navigate
-        // 2. Schedule
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("schedule") },
-            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
-            label = { Text("Schedule") }
-        )
-
-        // 3. Grades
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-            label = { Text("Grades") }
-        )
-        // 4. Task
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("task") },
-            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
-            label = { Text("Task") }
-        )
-
-        // 5. Campus Info
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("campusInfo") },
-            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
-            label = { Text("Info") }
-        )
-    }
-
-    @Composable
-    fun BottomNavWithController(navController: NavController) {
-        NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-            // 1. Home
-            NavigationBarItem(
-                selected = true,
-                onClick = { navController.navigate("dashboard") },
-                icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-                label = { Text("Home") }
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(UniAccent)
             )
 
+            Spacer(modifier = Modifier.width(16.dp))
 
-            //changed to nav controller to navigate
-            // 2. Schedule
-            NavigationBarItem(
-                selected = false,
-                onClick = { navController.navigate("schedule") },
-                icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
-                label = { Text("Schedule") }
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Due: ${task.dueDate}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+            //Buttons for Edit & Delete
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
+                }
 
-            // 3. Grades
-            NavigationBarItem(
-                selected = false,
-                onClick = {},
-                icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-                label = { Text("Grades") }
-            )
-            // 4. Task
-            NavigationBarItem(
-                selected = false,
-                onClick = { navController.navigate("task") },
-                icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
-                label = { Text("Task") }
-            )
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Edit") },
+                        onClick = {
+                            menuExpanded = false
+                            onEdit()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Rounded.Edit, contentDescription = null)
+                        }
+                    )
 
-            // 5. Campus Info
-            NavigationBarItem(
-                selected = false,
-                onClick = { navController.navigate("campusInfo") },
-                icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
-                label = { Text("Info") }
-            )
+                    DropdownMenuItem(
+                        text = { Text("Delete") },
+                        onClick = {
+                            menuExpanded = false
+                            onDelete()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Rounded.Delete, contentDescription = null)
+                        }
+                    )
+                }
+            }
         }
     }
 }

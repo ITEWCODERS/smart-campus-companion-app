@@ -355,12 +355,12 @@ fun CampusBottomNav(navController: NavController) {
             label = { Text("Schedule") }
         )
 
-        // 3. Grades
+        // 3. Task
         NavigationBarItem(
             selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-            label = { Text("Grades") }
+            onClick = { navController.navigate("task") },
+            icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
+            label = { Text("Tasks") }
         )
         // 4. Task
         NavigationBarItem(
