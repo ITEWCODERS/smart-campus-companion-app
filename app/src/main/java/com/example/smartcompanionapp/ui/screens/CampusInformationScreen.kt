@@ -23,11 +23,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.smartcompanionapp.R
-// IF 'R' IS RED BELOW: Click on it and press Alt + Enter to import your specific project R file.
-// It usually looks like: import com.example.yourprojectname.R
 
-// 1. Data Model
 data class Department(
     val name: String,
     val acronym: String,
@@ -37,20 +35,10 @@ data class Department(
     val imageRes: Int
 )
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                CampusInfoScreen(onBackClick = {})
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampusInfoScreen(onBackClick: () -> Unit) {
+fun CampusInfoScreen(navController: NavController) {
     // 2. Static Data
     val departments = listOf(
         Department(
@@ -109,7 +97,9 @@ fun CampusInfoScreen(onBackClick: () -> Unit) {
             TopAppBar(
                 title = { Text("Campus Information") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = { navController.popBackStack() }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -148,9 +138,7 @@ fun DepartmentCardUI(department: Department) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column {
-            // 3. FIXED IMAGE COMPOSABLE
             Image(
-                // 🔴 THE FIX WAS HERE: Use 'department.imageRes', not just 'department'
                 painter = painterResource(id = department.imageRes),
                 contentDescription = "${department.acronym} Building",
                 contentScale = ContentScale.Crop,
@@ -217,8 +205,3 @@ fun ContactLine(icon: ImageVector, text: String) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewCampusScreen() {
-    CampusInfoScreen(onBackClick = {})
-}
