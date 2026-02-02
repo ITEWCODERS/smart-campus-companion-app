@@ -6,27 +6,31 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.smartcompanionapp.data.SessionManager
+import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
+import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
     Scaffold(
         containerColor = AppBackground,
         topBar = {
@@ -49,7 +53,7 @@ fun SettingsScreen(navController: NavController) {
                     containerColor = AppSurface
                 )
             )
-        }, bottomBar = { BottomNavWithController(navController) },
+        }, bottomBar = { CampusBottomNav(navController) },
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -72,7 +76,7 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.Rounded.Notifications,
                     title = "Notifications",
                     subtitle = "Manage push settings",
-                    onClick = { navController.navigate("notifications") }
+                    onClick = { /* Handle notifications click */ }
                 )
             }
 
@@ -96,11 +100,12 @@ fun SettingsScreen(navController: NavController) {
 
             item {
                 SettingsCard(
-                    icon = Icons.Rounded.Logout,
+                    icon = Icons.AutoMirrored.Rounded.Logout,
                     title = "Log out",
                     onClick = {
-                        navController.navigate("login") {
-                            popUpTo("dashboard") { inclusive = true }
+                        sessionManager.clearSession()
+                        navController.navigate(Screen.GetStarted.route) {
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )
