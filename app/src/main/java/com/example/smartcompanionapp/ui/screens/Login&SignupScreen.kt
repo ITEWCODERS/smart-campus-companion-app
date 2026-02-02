@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.smartcompanionapp.data.SessionManager
 import com.example.smartcompanionapp.data.User
 import com.example.smartcompanionapp.data.UserRepository
 import com.example.smartcompanionapp.data.UserRole
@@ -132,6 +134,9 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
 
 @Composable
 fun LoginScreen(navController: NavController) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.USER) }
@@ -213,6 +218,9 @@ fun LoginScreen(navController: NavController) {
                     val user = UserRepository.login(username, password)
                     if (user != null) {
                         if (user.role == selectedRole) {
+                            // Save session
+                            sessionManager.saveSession(user.username, user.role.name)
+                            
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.Login.route) { inclusive = true }
                             }
