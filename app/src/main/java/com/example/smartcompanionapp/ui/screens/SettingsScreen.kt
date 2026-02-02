@@ -49,7 +49,7 @@ fun SettingsScreen(navController: NavController) {
                     containerColor = AppSurface
                 )
             )
-        }
+        }, bottomBar = { BottomNavWithController(navController) },
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
