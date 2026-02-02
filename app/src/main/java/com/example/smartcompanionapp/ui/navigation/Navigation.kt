@@ -1,36 +1,52 @@
 package com.example.smartcompanionapp.ui.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.smartcompanionapp.ui.screens.LoginScreen
-import com.example.smartcompanionapp.ui.screens.CampusInfoScreen
-import com.example.smartcompanionapp.ui.screens.DashboardScreen
-import com.example.smartcompanionapp.ui.screens.ScheduleScreen
-import com.example.smartcompanionapp.ui.screens.SignUpScreen
-import com.example.smartcompanionapp.ui.screens.TaskScreen
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.smartcompanionapp.ui.screens.*
+import com.example.smartcompanionapp.ui.theme.AppSurface
 
 sealed class Screen(val route: String) {
+    object GetStarted : Screen("get_started")
+    object Login : Screen("login")
+    object Signup : Screen("signup")
     object Dashboard : Screen("dashboard")
     object Schedule : Screen("schedule")
-
     object CampusInformation : Screen("campusInfo")
     object Task : Screen("task")
-
-    object login : Screen("login")
-    object signup : Screen("signup")
-
-    object task : Screen("task")
-
 }
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.login.route
+        startDestination = Screen.GetStarted.route
     ) {
+        composable(Screen.GetStarted.route) {
+            GetStartedScreen(
+                onLogin = { navController.navigate(Screen.Login.route) },
+                onSignUp = { navController.navigate(Screen.Signup.route) }
+            )
+        }
+        composable(Screen.Login.route) {
+            LoginScreen(navController)
+        }
+        composable(Screen.Signup.route) {
+            SignUpScreen(navController)
+        }
         composable(Screen.Dashboard.route) {
             DashboardScreen(navController)
         }
@@ -40,16 +56,62 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.CampusInformation.route) {
             CampusInfoScreen(navController)
         }
-        composable(Screen.login.route) {
-            LoginScreen(navController)
-        }
-
-        composable(Screen.signup.route) {
-            SignUpScreen(navController)
-        }
-
-        composable(Screen.task.route) {
+        composable(Screen.Task.route) {
             TaskScreen(navController)
         }
+    }
+}
+
+@Composable
+fun CampusBottomNav(navController: NavController) {
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry.value?.destination?.route
+
+    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+        NavigationBarItem(
+            selected = currentRoute == Screen.Dashboard.route,
+            onClick = {
+                if (currentRoute != Screen.Dashboard.route) {
+                    navController.navigate(Screen.Dashboard.route) {
+                        popUpTo(Screen.Dashboard.route) { inclusive = true }
+                    }
+                }
+            },
+            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
+            label = { Text("Home") }
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Screen.Schedule.route,
+            onClick = {
+                if (currentRoute != Screen.Schedule.route) {
+                    navController.navigate(Screen.Schedule.route)
+                }
+            },
+            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
+            label = { Text("Schedule") }
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Screen.Task.route,
+            onClick = {
+                if (currentRoute != Screen.Task.route) {
+                    navController.navigate(Screen.Task.route)
+                }
+            },
+            icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
+            label = { Text("Tasks") }
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Screen.CampusInformation.route,
+            onClick = {
+                if (currentRoute != Screen.CampusInformation.route) {
+                    navController.navigate(Screen.CampusInformation.route)
+                }
+            },
+            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
+            label = { Text("Info") }
+        )
     }
 }

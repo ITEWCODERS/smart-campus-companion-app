@@ -1,8 +1,5 @@
 package com.example.smartcompanionapp.ui.screens
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,11 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.School
-import androidx.compose.material.icons.rounded.Task
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,11 +18,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.R
-import com.example.smartcompanionapp.ui.theme.AppSurface
+import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 
 data class Department(
     val name: String,
@@ -41,11 +32,9 @@ data class Department(
     val imageRes: Int
 )
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampusInfoScreen(navController: NavController) {
-    // 2. Static Data
     val departments = listOf(
         Department(
             name = "College of Computing and Engineering",
@@ -87,7 +76,6 @@ fun CampusInfoScreen(navController: NavController) {
             phone = "(049) 508-0111 loc 105",
             imageRes = R.drawable.ccs
         ),
-
         Department(
             name = "College of Education",
             acronym = "COE",
@@ -103,9 +91,7 @@ fun CampusInfoScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Campus Information") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = { navController.popBackStack() }
-                    ) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -118,8 +104,8 @@ fun CampusInfoScreen(navController: NavController) {
                     titleContentColor = Color.White
                 )
             )
-        } ,
-        bottomBar = { BottomNavWithController(navController) },
+        },
+        bottomBar = { CampusBottomNav(navController) },
         containerColor = Color(0xFFF0F0F0)
     ) { innerPadding ->
         LazyColumn(
@@ -154,7 +140,6 @@ fun DepartmentCardUI(department: Department) {
                     .height(140.dp)
             )
 
-            // --- CONTENT ---
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -200,7 +185,7 @@ fun ContactLine(icon: ImageVector, text: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFFDAA520), // PnC Gold
+            tint = Color(0xFFDAA520),
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(10.dp))
@@ -211,52 +196,3 @@ fun ContactLine(icon: ImageVector, text: String) {
         )
     }
 }
-
-@Composable
-fun BottomInfoNavWithController(navController: NavController) {
-    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // 1. Home
-        NavigationBarItem(
-            selected = true,
-            onClick = { navController.navigate("dashboard") },
-            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-            label = { Text("Home") }
-        )
-
-
-        //changed to nav controller to navigate
-        // 2. Schedule
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("schedule") },
-            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
-            label = { Text("Schedule") }
-        )
-
-        // 3. Grades
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-            label = { Text("Grades") }
-        )
-        // 4. Task
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("task") },
-            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
-            label = { Text("Task") }
-        )
-
-        // 5. Campus Info
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("campusInfo") },
-            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
-            label = { Text("Info") }
-        )
-    }
-
-
-}
-

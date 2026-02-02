@@ -4,13 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.School
-import androidx.compose.material.icons.rounded.Task
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,59 +13,50 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.example.smartcompanionapp.model.Task
-import com.example.smartcompanionapp.ui.theme.AppSurface
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.model.Task
+import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(navController: NavController) {
-    val tasks = listOf(
-        Task("Finish Android Assignment", "Jan 20"),
-        Task("Prepare for Exam", "Jan 22"),
-        Task("Submit Project Report", "Jan 25")
-    )
-}
-
-    Scaffold(
-        bottomBar = { BottomNavWithController(navController) },
-        containerColor = Color(0xFFF0F0F0)
-    ) { innerPadding ->
-
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Tasks",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+    val tasks = remember {
+        mutableStateListOf(
+            Task("Finish Android Assignment", "Jan 20"),
+            Task("Prepare for Exam", "Jan 22"),
+            Task("Submit Project Report", "Jan 25")
         )
     }
 
-
     Scaffold(
-        topBar = { TaskTopBar { navController.popBackStack() } },
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Tasks") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
+        bottomBar = { CampusBottomNav(navController) },
         containerColor = AppBackground,
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { },
-                shape = CircleShape
+                onClick = { /* TODO: Add Task logic */ },
+                shape = CircleShape,
+                containerColor = UniPrimary,
+                contentColor = Color.White
             ) {
                 Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
             }
         }
     ) { paddingValues ->
-        //List of tasks
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,11 +69,10 @@ fun TaskScreen(navController: NavController) {
                 TaskCard(
                     task = task,
                     onDelete = {
-                        //Deletes a selected task
                         tasks.remove(task)
                     },
                     onEdit = {
-                        // No function yet
+                        // TODO: Edit Task logic
                     }
                 )
             }
@@ -104,7 +87,7 @@ fun TaskCard(
     onEdit: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    //Card for tasks
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -115,7 +98,6 @@ fun TaskCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Box(
                 modifier = Modifier
                     .size(10.dp)
@@ -139,7 +121,7 @@ fun TaskCard(
                     color = TextSecondary
                 )
             }
-            //Buttons for Edit & Delete
+            
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
