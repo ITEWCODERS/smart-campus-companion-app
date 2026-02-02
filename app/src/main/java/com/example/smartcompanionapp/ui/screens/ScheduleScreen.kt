@@ -232,19 +232,12 @@ fun BottomNavWithController(navController: NavController) {
             label = { Text("Schedule") }
         )
 
-        // 3. Grades
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-            label = { Text("Grades") }
-        )
-        // 4. Task
+        // 3. Task
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("task") },
-            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
-            label = { Text("Task") }
+            icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
+            label = { Text("Tasks") }
         )
 
         // 5. Campus Info
@@ -253,6 +246,13 @@ fun BottomNavWithController(navController: NavController) {
             onClick = { navController.navigate("campusInfo") },
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Info") }
+        )
+        // 6. Settings
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("settings") },
+            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") }
         )
     }
 }
