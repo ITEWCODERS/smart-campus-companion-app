@@ -56,7 +56,8 @@ fun TaskScreen(navController: NavController) {
     }
 
     Scaffold(
-        topBar = { TaskTopBar { navController.popBackStack() } },
+        topBar = { TaskTopBar { navController.popBackStack() } }
+        , bottomBar = { BottomNavWithController(navController) },
         containerColor = AppBackground,
         floatingActionButton = {
             FloatingActionButton(

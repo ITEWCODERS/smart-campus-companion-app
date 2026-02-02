@@ -109,12 +109,12 @@ fun CampusInfoScreen(navController: NavController) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = Color.Black
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF006400),
+                    containerColor = Color(0xFFF0F0F0),
                     titleContentColor = Color.White
                 )
             )
@@ -212,51 +212,4 @@ fun ContactLine(icon: ImageVector, text: String) {
     }
 }
 
-@Composable
-fun BottomInfoNavWithController(navController: NavController) {
-    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // 1. Home
-        NavigationBarItem(
-            selected = true,
-            onClick = { navController.navigate("dashboard") },
-            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-            label = { Text("Home") }
-        )
-
-
-        //changed to nav controller to navigate
-        // 2. Schedule
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("schedule") },
-            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
-            label = { Text("Schedule") }
-        )
-
-        // 3. Grades
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Rounded.School, contentDescription = "Academics") },
-            label = { Text("Grades") }
-        )
-        // 4. Task
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("task") },
-            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
-            label = { Text("Task") }
-        )
-
-        // 5. Campus Info
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("campusInfo") },
-            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
-            label = { Text("Info") }
-        )
-    }
-
-
-}
 
