@@ -4,6 +4,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Task
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,9 +19,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.example.smartcompanionapp.ui.theme.AppSurface
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.model.Task
 import com.example.smartcompanionapp.ui.theme.*
@@ -47,9 +55,8 @@ fun TaskScreen(navController: NavController) {
         )
     }
 
-
     Scaffold(
-        topBar = { TaskTopBar { navController.popBackStack() } }, bottomBar = { BottomNavWithController(navController) },
+        topBar = { TaskTopBar { navController.popBackStack() } },
         containerColor = AppBackground,
         floatingActionButton = {
             FloatingActionButton(
