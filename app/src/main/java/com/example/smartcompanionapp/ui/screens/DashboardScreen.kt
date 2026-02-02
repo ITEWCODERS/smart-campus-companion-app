@@ -362,13 +362,6 @@ fun CampusBottomNav(navController: NavController) {
             icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
             label = { Text("Tasks") }
         )
-        // 4. Task
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("task") },
-            icon = { Icon(Icons.Rounded.Task, contentDescription = "Campus Info") },
-            label = { Text("Task") }
-        )
 
         // 5. Campus Info
         NavigationBarItem(
@@ -377,6 +370,19 @@ fun CampusBottomNav(navController: NavController) {
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Info") }
         )
+        // 6. Settings
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("settings") },
+            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") }
+        )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenPreview() {
+    DashboardScreen(navController = androidx.navigation.compose.rememberNavController())
 }
 
