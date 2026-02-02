@@ -377,6 +377,19 @@ fun CampusBottomNav(navController: NavController) {
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Info") }
         )
+        // 6. Settings
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("settings") },
+            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") }
+        )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenPreview() {
+    DashboardScreen(navController = androidx.navigation.compose.rememberNavController())
 }
 
