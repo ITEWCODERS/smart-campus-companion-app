@@ -215,7 +215,7 @@ fun LoginScreen(navController: NavController) {
                 .clip(RoundedCornerShape(16.dp))
                 .background(PrimaryGradientHorizontal)
                 .clickable {
-                    val user = UserRepository.login(username, password)
+                    val user = UserRepository.login(context, username, password)
                     if (user != null) {
                         if (user.role == selectedRole) {
                             // Save session
@@ -259,6 +259,7 @@ fun LoginScreen(navController: NavController) {
 
 @Composable
 fun SignUpScreen(navController: NavController) {
+    val context = LocalContext.current
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
@@ -338,6 +339,7 @@ fun SignUpScreen(navController: NavController) {
                         errorMessage = "Please fill all required fields"
                     } else {
                         val success = UserRepository.signUp(
+                            context,
                             User(username, password, selectedRole, email, phoneNumber)
                         )
                         if (success) {
