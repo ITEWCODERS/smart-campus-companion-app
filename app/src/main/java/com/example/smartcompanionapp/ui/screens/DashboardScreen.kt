@@ -17,14 +17,35 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
-import com.example.smartcompanionapp.ui.theme.*
+import com.example.smartcompanionapp.ui.theme.ActionEventsBg
+import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
+import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
+import com.example.smartcompanionapp.ui.theme.ActionLibraryIcon
+import com.example.smartcompanionapp.ui.theme.ActionMapBg
+import com.example.smartcompanionapp.ui.theme.ActionMapIcon
+import com.example.smartcompanionapp.ui.theme.ActionShuttleBg
+import com.example.smartcompanionapp.ui.theme.ActionShuttleIcon
+import com.example.smartcompanionapp.ui.theme.AlertBg
+import com.example.smartcompanionapp.ui.theme.AlertText
+import com.example.smartcompanionapp.ui.theme.AppBackground
+import com.example.smartcompanionapp.ui.theme.AppSurface
+import com.example.smartcompanionapp.ui.theme.EventInfoBg
+import com.example.smartcompanionapp.ui.theme.EventInfoText
+import com.example.smartcompanionapp.ui.theme.TextPrimary
+import com.example.smartcompanionapp.ui.theme.TextSecondary
+import com.example.smartcompanionapp.ui.theme.UniAccent
+import com.example.smartcompanionapp.ui.theme.UniPrimary
+import com.example.smartcompanionapp.ui.theme.UniSecondary
+
+
 
 @Composable
 fun DashboardScreen(navController: NavController){
+    //added nav controller
     Scaffold(
         containerColor = AppBackground,
         bottomBar = { CampusBottomNav(navController) }
@@ -37,24 +58,28 @@ fun DashboardScreen(navController: NavController){
             contentPadding = PaddingValues(top = 20.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // 1. Header
             item {
                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                     StudentHeader()
                 }
             }
 
+            // 2. Next Class (With Teacher info)
             item {
                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                     NextClassCard()
                 }
             }
 
+            // 3. Announcements
             item {
                 SectionTitle(title = "Campus News", action = "View All")
                 Spacer(modifier = Modifier.height(12.dp))
                 AnnouncementList()
             }
 
+            // 4. Deadlines
             item {
                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                     Column {
@@ -74,6 +99,8 @@ fun DashboardScreen(navController: NavController){
         }
     }
 }
+
+// --- Components ---
 
 @Composable
 fun StudentHeader() {
@@ -304,3 +331,58 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
         Text(text = text, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = textColor)
     }
 }
+
+@Composable
+//added nav controller
+fun CampusBottomNav(navController: NavController) {
+    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+        // changed this one so we can go back to home
+        // 1. Home
+        NavigationBarItem(
+            selected = true,
+            onClick = { navController.navigate("dashboard") },
+            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
+            label = { Text("Home") }
+        )
+
+
+        //changed to nav controller to navigate
+        // 2. Schedule
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("schedule") },
+            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
+            label = { Text("Schedule") }
+        )
+
+        // 3. Task
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("task") },
+            icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
+            label = { Text("Tasks") }
+        )
+
+        // 5. Campus Info
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("campusInfo") },
+            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
+            label = { Text("Info") }
+        )
+        // 6. Settings
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("settings") },
+            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenPreview() {
+    DashboardScreen(navController = androidx.navigation.compose.rememberNavController())
+}
+

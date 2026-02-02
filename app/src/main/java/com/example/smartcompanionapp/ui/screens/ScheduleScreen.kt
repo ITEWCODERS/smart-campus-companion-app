@@ -22,13 +22,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.model.Tasks
-import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 import com.example.smartcompanionapp.ui.theme.*
 
+/**
+ * Main Schedule Screen displaying a calendar and tasks for the selected day.
+ * @param navController Controller for navigation between screens.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(navController: NavController) {
 
+    // Sample tasks (in production, this should come from a repository / ViewModel)
     val tasks = remember {
         listOf(
             Tasks("Physics Lab", "10:00 AM", "20"),
@@ -38,22 +42,16 @@ fun ScheduleScreen(navController: NavController) {
         )
     }
 
+    // State for current month and selected day
     var currentMonth by remember { mutableStateOf("Jan 2026") }
     var selectedDay by remember { mutableStateOf("20") }
 
     Scaffold(
-        containerColor = AppBackground,
+        containerColor = AppBackground, // Screen background color
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Schedule") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            ScheduleTopAppBar(navController)
         },
-        bottomBar = { CampusBottomNav(navController) }
+        bottomBar = { BottomNavWithController(navController) }
     ) { padding ->
 
         Column(
@@ -69,10 +67,12 @@ fun ScheduleScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Calendar grid (7 columns for 7 days a week)
             CalendarGrid(selectedDay = selectedDay, onDaySelected = { selectedDay = it })
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Filter tasks by selected day
             val filteredTasks = tasks.filter { it.date == selectedDay }
 
             if (filteredTasks.isEmpty()) {
@@ -84,6 +84,21 @@ fun ScheduleScreen(navController: NavController) {
     }
 }
 
+/** Top App Bar for the Schedule screen */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ScheduleTopAppBar(navController: NavController) {
+    CenterAlignedTopAppBar(
+        title = { Text("Schedule") },
+        navigationIcon = {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+            }
+        }
+    )
+}
+
+/** Month navigation row with previous and next buttons */
 @Composable
 fun MonthNavigation(currentMonth: String, onPrevious: () -> Unit, onNext: () -> Unit) {
     Row(
@@ -93,16 +108,13 @@ fun MonthNavigation(currentMonth: String, onPrevious: () -> Unit, onNext: () -> 
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onPrevious) {
-            Icon(Icons.Rounded.ChevronLeft, contentDescription = "Previous Month")
-        }
-        Text(currentMonth, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-        IconButton(onClick = onNext) {
-            Icon(Icons.Rounded.ChevronRight, contentDescription = "Next Month")
-        }
+        Text("<", fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onPrevious() })
+        Text(currentMonth, fontWeight = FontWeight.Bold)
+        Text(">", fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onNext() })
     }
 }
 
+/** Calendar grid showing 30 days and highlighting the selected day */
 @Composable
 fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
     LazyVerticalGrid(
@@ -124,6 +136,7 @@ fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
     }
 }
 
+/** Individual day in the calendar */
 @Composable
 fun CalendarDay(day: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -144,30 +157,33 @@ fun CalendarDay(day: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
+/** LazyColumn for displaying a list of tasks */
 @Composable
 fun TaskList(tasks: List<Tasks>) {
     LazyColumn(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(tasks) { task ->
             ScheduleCard(task)
         }
+
     }
 }
 
+/** Card representing a single task */
 @Composable
 fun ScheduleCard(task: Tasks) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = AppSurface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        colors = CardDefaults.cardColors(containerColor = AppSurface)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Small dot indicator
             Box(
                 modifier = Modifier
                     .size(12.dp)
@@ -177,27 +193,66 @@ fun ScheduleCard(task: Tasks) {
 
             Column {
                 Text(task.title, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Text("Due: ${task.dueDate}", fontSize = 12.sp, color = TextSecondary)
+                Text(task.dueDate, fontSize = 12.sp, color = TextSecondary)
             }
         }
     }
 }
 
+/** Placeholder when no tasks are scheduled for the selected day */
 @Composable
 fun NoTasksPlaceholder() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                Icons.Rounded.EventBusy,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = TextSecondary.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("No tasks scheduled", color = TextSecondary)
-        }
+        Text("No tasks scheduled", color = TextSecondary)
+    }
+}
+
+/** Bottom navigation bar for the app */
+@Composable
+fun BottomNavWithController(navController: NavController) {
+    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+        // 1. Home
+        NavigationBarItem(
+            selected = true,
+            onClick = { navController.navigate("dashboard") },
+            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
+            label = { Text("Home") }
+        )
+
+
+        //changed to nav controller to navigate
+        // 2. Schedule
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("schedule") },
+            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
+            label = { Text("Schedule") }
+        )
+
+        // 3. Task
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("task") },
+            icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
+            label = { Text("Tasks") }
+        )
+
+        // 5. Campus Info
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("campusInfo") },
+            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
+            label = { Text("Info") }
+        )
+        // 6. Settings
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate("settings") },
+            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
+            label = { Text("Settings") }
+        )
     }
 }

@@ -1,5 +1,8 @@
 package com.example.smartcompanionapp.ui.screens
 
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +12,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Task
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,10 +26,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.R
-import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
+import com.example.smartcompanionapp.ui.theme.AppSurface
 
 data class Department(
     val name: String,
@@ -32,9 +41,11 @@ data class Department(
     val imageRes: Int
 )
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampusInfoScreen(navController: NavController) {
+    // 2. Static Data
     val departments = listOf(
         Department(
             name = "College of Computing and Engineering",
@@ -76,6 +87,7 @@ fun CampusInfoScreen(navController: NavController) {
             phone = "(049) 508-0111 loc 105",
             imageRes = R.drawable.ccs
         ),
+
         Department(
             name = "College of Education",
             acronym = "COE",
@@ -91,21 +103,23 @@ fun CampusInfoScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Campus Information") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(
+                        onClick = { navController.popBackStack() }
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White
+                            tint = Color.Black
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF006400),
+                    containerColor = Color(0xFFF0F0F0),
                     titleContentColor = Color.White
                 )
             )
-        },
-        bottomBar = { CampusBottomNav(navController) },
+        } ,
+        bottomBar = { BottomNavWithController(navController) },
         containerColor = Color(0xFFF0F0F0)
     ) { innerPadding ->
         LazyColumn(
@@ -140,6 +154,7 @@ fun DepartmentCardUI(department: Department) {
                     .height(140.dp)
             )
 
+            // --- CONTENT ---
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -185,7 +200,7 @@ fun ContactLine(icon: ImageVector, text: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFFDAA520),
+            tint = Color(0xFFDAA520), // PnC Gold
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(10.dp))
@@ -196,3 +211,5 @@ fun ContactLine(icon: ImageVector, text: String) {
         )
     }
 }
+
+
