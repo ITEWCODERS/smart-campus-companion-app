@@ -29,6 +29,8 @@ sealed class Screen(val route: String) {
     object CampusInformation : Screen("campusInfo")
     object Task : Screen("task")
     object Options : Screen("settings")
+
+    object Notifications : Screen("notifications")
 }
 
 @Composable
@@ -66,6 +68,10 @@ fun AppNavigation(
         }
         composable(Screen.Options.route) {
             SettingsScreen(navController)
+        }
+
+        composable(Screen.Notifications.route) {
+            NotificationsScreen(navController)
         }
     }
 }
