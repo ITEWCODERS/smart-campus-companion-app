@@ -76,7 +76,7 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.Rounded.Notifications,
                     title = "Notifications",
                     subtitle = "Manage push settings",
-                    onClick = { /* Handle notifications click */ }
+                    onClick = { navController.navigate("notifications") }
                 )
             }
 
