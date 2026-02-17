@@ -4,13 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.rememberNavController
+import com.example.smartcompanionapp.data.SessionManager
+import com.example.smartcompanionapp.ui.navigation.AppNavigation
+import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.SmartCompanionAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +19,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SmartCompanionAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                MainApp()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SmartCompanionAppTheme {
-        Greeting("Android")
+fun MainApp() {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val navController = rememberNavController()
+    
+    // Check if user is logged in
+    val startDestination = if (sessionManager.isLoggedIn()) {
+        Screen.Dashboard.route
+    } else {
+        Screen.GetStarted.route
     }
+
+    AppNavigation(
+        navController = navController,
+        startDestination = startDestination
+    )
 }
