@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data
+package com.example.smartcompanionapp.data.session
 
 import android.content.Context
 import android.content.SharedPreferences
