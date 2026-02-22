@@ -31,21 +31,21 @@ class TaskViewModel(private val dao: TaskDao) : ViewModel() {
 
     fun processIntent(intent: TaskIntent) {
         when (intent) {
-            is TaskIntent.AddTask -> addTask(intent.title, intent.dueDate)
-            is TaskIntent.UpdateTask -> updateTask(intent.task, intent.title, intent.dueDate)
+            is TaskIntent.AddTask -> addTask(intent.title, intent.description, intent.subject, intent.dueDate)
+            is TaskIntent.UpdateTask -> updateTask(intent.task, intent.title, intent.description, intent.subject, intent.dueDate)
             is TaskIntent.DeleteTask -> deleteTask(intent.task)
         }
     }
 
-    private fun addTask(title: String, dueDate: String) {
+    private fun addTask(title: String, description: String, subject: String, dueDate: String) {
         viewModelScope.launch {
-            dao.insertTask(Task(title = title, dueDate = dueDate))
+            dao.insertTask(Task(title = title, description = description, subject = subject, dueDate = dueDate))
         }
     }
 
-    private fun updateTask(task: Task, title: String, dueDate: String) {
+    private fun updateTask(task: Task, title: String, description: String, subject: String, dueDate: String) {
         viewModelScope.launch {
-            dao.updateTask(task.copy(title = title, dueDate = dueDate))
+            dao.updateTask(task.copy(title = title, description = description, subject = subject, dueDate = dueDate))
         }
     }
 
