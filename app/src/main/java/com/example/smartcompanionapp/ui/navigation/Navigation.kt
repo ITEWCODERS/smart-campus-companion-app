@@ -37,6 +37,7 @@ sealed class Screen(val route: String) {
     object CampusInformation : Screen("campusInfo")
     object Task : Screen("task")
     object Options : Screen("settings")
+    object AllAnnouncements : Screen("all_announcements")
 
     object Notifications : Screen("notifications")
 }
@@ -46,6 +47,22 @@ fun AppNavigation(
     navController: NavHostController,
     startDestination: String = Screen.GetStarted.route
 ) {
+    // ViewModel is hoisted to be shared between Dashboard and AllAnnouncements
+    val context = LocalContext.current
+    val database = AppDatabase.getDatabase(context)
+    val repository = remember { AnnouncementRepository(database.announcementDao()) }
+    val viewModel: DashboardViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return DashboardViewModel(repository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -63,21 +80,16 @@ fun AppNavigation(
             SignUpScreen(navController)
         }
         composable(Screen.Dashboard.route) {
-            val context = LocalContext.current
-            val database = AppDatabase.getDatabase(context)
-            val repository = remember { AnnouncementRepository(database.announcementDao()) }
-            val viewModel: DashboardViewModel = viewModel(
-                factory = object : ViewModelProvider.Factory {
-                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
-                            @Suppress("UNCHECKED_CAST")
-                            return DashboardViewModel(repository) as T
-                        }
-                        throw IllegalArgumentException("Unknown ViewModel class")
-                    }
+            DashboardScreen(
+                navController = navController,
+                viewModel = viewModel,
+                onViewAllClick = {
+                    navController.navigate(Screen.AllAnnouncements.route)
                 }
             )
-            DashboardScreen(navController, viewModel)
+        }
+        composable(Screen.AllAnnouncements.route) {
+            AllAnnouncementsScreen(navController, viewModel)
         }
         composable(Screen.Schedule.route) {
             ScheduleScreen(navController)
