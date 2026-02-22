@@ -1,16 +1,20 @@
 package com.example.smartcompanionapp.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,37 +24,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.ui.theme.ActionEventsBg
-import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
-import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
-import com.example.smartcompanionapp.ui.theme.ActionLibraryIcon
-import com.example.smartcompanionapp.ui.theme.ActionMapBg
-import com.example.smartcompanionapp.ui.theme.ActionMapIcon
-import com.example.smartcompanionapp.ui.theme.ActionShuttleBg
-import com.example.smartcompanionapp.ui.theme.ActionShuttleIcon
-import com.example.smartcompanionapp.ui.theme.AlertBg
-import com.example.smartcompanionapp.ui.theme.AlertText
-import com.example.smartcompanionapp.ui.theme.AppBackground
-import com.example.smartcompanionapp.ui.theme.AppSurface
-import com.example.smartcompanionapp.ui.theme.EventInfoBg
-import com.example.smartcompanionapp.ui.theme.EventInfoText
-import com.example.smartcompanionapp.ui.theme.TextPrimary
-import com.example.smartcompanionapp.ui.theme.TextSecondary
-import com.example.smartcompanionapp.ui.theme.UniAccent
-import com.example.smartcompanionapp.ui.theme.UniPrimary
-import com.example.smartcompanionapp.ui.theme.UniSecondary
-
-
+import androidx.navigation.compose.rememberNavController
+import com.example.smartcompanionapp.model.Announcement
+import com.example.smartcompanionapp.intent.DashboardIntent
+import com.example.smartcompanionapp.intent.DashboardState
+import com.example.smartcompanionapp.ui.theme.*
+import com.example.smartcompanionapp.viewmodel.DashboardViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
-fun DashboardScreen(navController: NavController){
-    //added nav controller
+fun DashboardScreen(
+    navController: NavController,
+    viewModel: DashboardViewModel
+) {
+    val state by viewModel.state.collectAsState()
+
     Scaffold(
         containerColor = AppBackground,
         bottomBar = { CampusBottomNav(navController) }
-    )
-    { paddingValues ->
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -58,6 +53,26 @@ fun DashboardScreen(navController: NavController){
             contentPadding = PaddingValues(top = 20.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            // --- NEW: TOP FLASHING ANNOUNCEMENT BANNER ---
+            item {
+                AnimatedVisibility(
+                    visible = state.topAnnouncement != null,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    state.topAnnouncement?.let { announcement ->
+                        Box(modifier = Modifier.padding(horizontal = 24.dp)) {
+                            AnnouncementBanner(
+                                announcement = announcement,
+                                onDismiss = {
+                                    viewModel.processIntent(DashboardIntent.DismissAnnouncement(announcement.id))
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             // 1. Header
             item {
                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -72,11 +87,11 @@ fun DashboardScreen(navController: NavController){
                 }
             }
 
-            // 3. Announcements
+            // 3. Announcements (Now dynamic from Room DB)
             item {
                 SectionTitle(title = "Campus News", action = "View All")
                 Spacer(modifier = Modifier.height(12.dp))
-                AnnouncementList()
+                AnnouncementList(newsList = state.campusNews)
             }
 
             // 4. Deadlines
@@ -100,7 +115,78 @@ fun DashboardScreen(navController: NavController){
     }
 }
 
-// --- Components ---
+// --- NEW COMPONENT: The Top Banner UI ---
+@Composable
+fun AnnouncementBanner(announcement: Announcement, onDismiss: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = AlertBg), // Uses your custom AlertBg
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Notifications,
+                contentDescription = "Alert",
+                tint = AlertText
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = announcement.title,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = AlertText
+                )
+                Text(
+                    text = announcement.content,
+                    fontSize = 12.sp,
+                    color = AlertText.copy(alpha = 0.8f)
+                )
+            }
+            IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Dismiss",
+                    tint = AlertText
+                )
+            }
+        }
+    }
+}
+
+// --- MODIFIED COMPONENT: Dynamic News List ---
+@Composable
+fun AnnouncementList(newsList: List<Announcement>) {
+    // A quick formatter to convert the Long timestamp into a readable date (e.g., "Jan 15")
+    val dateFormat = SimpleDateFormat("MMM dd, h:mm a", Locale.getDefault())
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // If there are no news items, you could show an empty state here,
+        // but for now we loop through the actual Room Database items!
+        items(newsList) { news ->
+            val dateString = dateFormat.format(Date(news.datePosted))
+
+            AnnouncementCard(
+                category = "Campus News", // You can update your DB Model to hold categories later!
+                title = news.title,
+                date = dateString,
+                color = EventInfoBg, // Defaulting to your EventInfo styles
+                textColor = EventInfoText
+            )
+        }
+    }
+}
+
+// --- ORIGINAL COMPONENTS (Left Untouched) ---
 
 @Composable
 fun StudentHeader() {
@@ -246,33 +332,6 @@ fun SectionTitle(title: String, action: String) {
 }
 
 @Composable
-fun AnnouncementList() {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            AnnouncementCard(
-                category = "Campus Alert",
-                title = "Library closed for renovation",
-                date = "2 hrs ago",
-                color = AlertBg,
-                textColor = AlertText
-            )
-        }
-        item {
-            AnnouncementCard(
-                category = "Event",
-                title = "Tech Career Fair 2024",
-                date = "5 hrs ago",
-                color = EventInfoBg,
-                textColor = EventInfoText
-            )
-        }
-    }
-}
-
-@Composable
 fun AnnouncementCard(category: String, title: String, date: String, color: Color, textColor: Color) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -333,44 +392,32 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
 }
 
 @Composable
-//added nav controller
 fun CampusBottomNav(navController: NavController) {
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // changed this one so we can go back to home
-        // 1. Home
         NavigationBarItem(
             selected = true,
             onClick = { navController.navigate("dashboard") },
             icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
             label = { Text("Home") }
         )
-
-
-        //changed to nav controller to navigate
-        // 2. Schedule
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("schedule") },
             icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
             label = { Text("Schedule") }
         )
-
-        // 3. Task
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("task") },
             icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
             label = { Text("Tasks") }
         )
-
-        // 5. Campus Info
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("campusInfo") },
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Info") }
         )
-        // 6. Settings
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("settings") },
@@ -383,6 +430,7 @@ fun CampusBottomNav(navController: NavController) {
 @Preview(showBackground = true)
 @Composable
 fun DashboardScreenPreview() {
-    DashboardScreen(navController = androidx.navigation.compose.rememberNavController())
+    // This will now cause a crash if you don't have a way to preview the ViewModel.
+    // A common approach is to create a fake/mock ViewModel for previews.
+    // DashboardScreen(navController = rememberNavController(), viewModel = ...)
 }
-

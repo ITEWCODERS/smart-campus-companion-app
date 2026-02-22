@@ -11,14 +11,22 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.smartcompanionapp.data.local.AppDatabase
+import com.example.smartcompanionapp.data.repository.AnnouncementRepository
 import com.example.smartcompanionapp.ui.screens.*
 import com.example.smartcompanionapp.ui.theme.AppSurface
+import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 
 sealed class Screen(val route: String) {
     object GetStarted : Screen("get_started")
@@ -55,7 +63,21 @@ fun AppNavigation(
             SignUpScreen(navController)
         }
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController)
+            val context = LocalContext.current
+            val database = AppDatabase.getDatabase(context)
+            val repository = remember { AnnouncementRepository(database.announcementDao()) }
+            val viewModel: DashboardViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+                            @Suppress("UNCHECKED_CAST")
+                            return DashboardViewModel(repository) as T
+                        }
+                        throw IllegalArgumentException("Unknown ViewModel class")
+                    }
+                }
+            )
+            DashboardScreen(navController, viewModel)
         }
         composable(Screen.Schedule.route) {
             ScheduleScreen(navController)
