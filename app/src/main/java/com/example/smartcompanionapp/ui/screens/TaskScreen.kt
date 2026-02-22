@@ -1,6 +1,8 @@
 package com.example.smartcompanionapp.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,6 +27,9 @@ import com.example.smartcompanionapp.data.model.Task
 import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.TaskViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,8 +124,8 @@ fun TaskScreen(
         if (showAddTaskDialog) {
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
-                onAddTask = { title, dueDate ->
-                    viewModel.processIntent(TaskIntent.AddTask(title, dueDate))
+                onAddTask = { title, description, subject, dueDate ->
+                    viewModel.processIntent(TaskIntent.AddTask(title, description, subject, dueDate))
                     showAddTaskDialog = false
                 }
             )
@@ -131,8 +136,8 @@ fun TaskScreen(
                 EditTaskDialog(
                     task = task,
                     onDismiss = { showEditTaskDialog = false },
-                    onEditTask = { title, dueDate ->
-                        viewModel.processIntent(TaskIntent.UpdateTask(task, title, dueDate))
+                    onEditTask = { title, description, subject, dueDate ->
+                        viewModel.processIntent(TaskIntent.UpdateTask(task, title, description, subject, dueDate))
                         showEditTaskDialog = false
                     }
                 )
@@ -141,14 +146,46 @@ fun TaskScreen(
     }
 }
 
+private fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    onAddTask: (String, String) -> Unit
+    onAddTask: (String, String, String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var subject by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        dueDate = convertMillisToDate(it)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -162,9 +199,29 @@ fun AddTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = subject,
+                    onValueChange = { subject = it },
+                    label = { Text("Subject") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
                     value = dueDate,
                     onValueChange = { dueDate = it },
-                    label = { Text("Due Date") }
+                    label = { Text("Due Date (dd/MM/yyyy)") },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(
+                            Icons.Rounded.DateRange,
+                            contentDescription = "Select date",
+                            modifier = Modifier.clickable { showDatePicker = true }
+                        )
+                    }
                 )
             }
         },
@@ -172,12 +229,12 @@ fun AddTaskDialog(
             Button(
                 onClick = {
                     if (title.isNotBlank() && dueDate.isNotBlank()) {
-                        onAddTask(title, dueDate)
+                        onAddTask(title, description, subject, dueDate)
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
             ) {
-                Text("Confirm", color = Color.White)
+                Text("Add", color = Color.White)
             }
         },
         dismissButton = {
@@ -185,20 +242,48 @@ fun AddTaskDialog(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(containerColor = AppSurface)
             ) {
-                Text("Close", color = TextPrimary)
+                Text("Cancel", color = TextPrimary)
             }
         }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
     task: Task,
     onDismiss: () -> Unit,
-    onEditTask: (String, String) -> Unit
+    onEditTask: (String, String, String, String) -> Unit
 ) {
     var title by remember { mutableStateOf(task.title) }
+    var description by remember { mutableStateOf(task.description) }
+    var subject by remember { mutableStateOf(task.subject) }
     var dueDate by remember { mutableStateOf(task.dueDate) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        dueDate = convertMillisToDate(it)
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -212,9 +297,29 @@ fun EditTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = subject,
+                    onValueChange = { subject = it },
+                    label = { Text("Subject") }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
                     value = dueDate,
                     onValueChange = { dueDate = it },
-                    label = { Text("Due Date") }
+                    label = { Text("Due Date (dd/MM/yyyy)") },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(
+                            Icons.Rounded.DateRange,
+                            contentDescription = "Select date",
+                            modifier = Modifier.clickable { showDatePicker = true }
+                        )
+                    }
                 )
             }
         },
@@ -222,16 +327,19 @@ fun EditTaskDialog(
             Button(
                 onClick = {
                     if (title.isNotBlank() && dueDate.isNotBlank()) {
-                        onEditTask(title, dueDate)
+                        onEditTask(title, description, subject, dueDate)
                     }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
             ) {
-                Text("Save")
+                Text("Save", color = Color.White)
             }
         },
         dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancel")
+            Button(onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = AppSurface)
+            ) {
+                Text("Cancel", color = TextPrimary)
             }
         }
     )
@@ -267,6 +375,18 @@ fun TaskCard(
                     style = MaterialTheme.typography.bodyLarge,
                     color = TextPrimary,
                     fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = task.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = task.subject,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
