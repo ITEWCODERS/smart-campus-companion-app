@@ -19,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.smartcompanionapp.ui.screens.*
 import com.example.smartcompanionapp.ui.theme.AppSurface
+import com.example.smartcompanionapp.viewmodel.TaskViewModel
 
 sealed class Screen(val route: String) {
     object GetStarted : Screen("get_started")
@@ -36,7 +37,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    startDestination: String = Screen.GetStarted.route
+    startDestination: String = Screen.GetStarted.route,
+    taskViewModel: TaskViewModel
 ) {
     NavHost(
         navController = navController,
@@ -64,7 +66,7 @@ fun AppNavigation(
             CampusInfoScreen(navController)
         }
         composable(Screen.Task.route) {
-            TaskScreen(navController)
+            TaskScreen(navController, taskViewModel)
         }
         composable(Screen.Options.route) {
             SettingsScreen(navController)

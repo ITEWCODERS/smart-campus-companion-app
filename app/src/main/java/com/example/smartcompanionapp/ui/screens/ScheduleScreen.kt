@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.model.Tasks
+import com.example.smartcompanionapp.data.model.Tasks
 import com.example.smartcompanionapp.ui.theme.*
 
 /**
@@ -33,14 +33,7 @@ import com.example.smartcompanionapp.ui.theme.*
 fun ScheduleScreen(navController: NavController) {
 
     // Sample tasks (in production, this should come from a repository / ViewModel)
-    val tasks = remember {
-        listOf(
-            Tasks("Physics Lab", "10:00 AM", "20"),
-            Tasks("Data Structures", "1:00 PM", "21"),
-            Tasks("Group Meeting", "3:30 PM", "22"),
-            Tasks("Math Quiz", "9:00 AM", "23")
-        )
-    }
+
 
     // State for current month and selected day
     var currentMonth by remember { mutableStateOf("Jan 2026") }
@@ -73,13 +66,14 @@ fun ScheduleScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Filter tasks by selected day
-            val filteredTasks = tasks.filter { it.date == selectedDay }
-
-            if (filteredTasks.isEmpty()) {
-                NoTasksPlaceholder()
-            } else {
-                TaskList(tasks = filteredTasks)
-            }
+//            val filteredTasks = tasks.filter { it.date == selectedDay }
+//
+//            if (filteredTasks.isEmpty()) {
+//                NoTasksPlaceholder()
+//            } else {
+//                TaskList(tasks = filteredTasks)
+//            }
+            NoTasksPlaceholder()
         }
     }
 }

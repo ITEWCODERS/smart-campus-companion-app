@@ -23,7 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.data.SessionManager
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.data.User
 import com.example.smartcompanionapp.data.UserRepository
 import com.example.smartcompanionapp.data.UserRole
