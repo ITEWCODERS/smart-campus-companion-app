@@ -1,5 +1,7 @@
 package com.example.smartcompanionapp.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,22 +25,28 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Tasks
 import com.example.smartcompanionapp.ui.theme.*
+//
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 /**
  * Main Schedule Screen displaying a calendar and tasks for the selected day.
  * @param navController Controller for navigation between screens.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(navController: NavController) {
 
-    // Sample tasks (in production, this should come from a repository / ViewModel)
-
-
     // State for current month and selected day
-    var currentMonth by remember { mutableStateOf("Jan 2026") }
-    var selectedDay by remember { mutableStateOf("20") }
+    // Holds the current visible month (example: January 2026)
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
 
+    // Formats month to display like: Jan 2026
+    val monthFormatter = DateTimeFormatter.ofPattern("MMM yyyy")
+
+    // Selected day
+    var selectedDay by remember { mutableStateOf("1") }
     Scaffold(
         containerColor = AppBackground, // Screen background color
         topBar = {
@@ -53,16 +61,29 @@ fun ScheduleScreen(navController: NavController) {
                 .fillMaxSize()
         ) {
             MonthNavigation(
-                currentMonth = currentMonth,
-                onPrevious = { /* TODO: implement previous month logic */ },
-                onNext = { /* TODO: implement next month logic */ }
+                currentMonth = currentMonth.format(monthFormatter),
+
+                // Moves to previous month
+                onPrevious = {
+                    currentMonth = currentMonth.minusMonths(1)
+                    selectedDay = "1" // Reset selected day when month changes
+                },
+
+                // Moves to next month
+                onNext = {
+                    currentMonth = currentMonth.plusMonths(1)
+                    selectedDay = "1"
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             // Calendar grid (7 columns for 7 days a week)
-            CalendarGrid(selectedDay = selectedDay, onDaySelected = { selectedDay = it })
-
+            CalendarGrid(
+                daysInMonth = currentMonth.lengthOfMonth(), // Auto-detects 28, 29, 30, or 31
+                selectedDay = selectedDay,
+                onDaySelected = { selectedDay = it }
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             // Filter tasks by selected day
@@ -110,7 +131,11 @@ fun MonthNavigation(currentMonth: String, onPrevious: () -> Unit, onNext: () -> 
 
 /** Calendar grid showing 30 days and highlighting the selected day */
 @Composable
-fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
+fun CalendarGrid(
+    daysInMonth: Int,
+    selectedDay: String,
+    onDaySelected: (String) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(7),
         modifier = Modifier
@@ -119,8 +144,11 @@ fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(30) { index ->
+
+        // Generates correct number of days depending on month
+        items(daysInMonth) { index ->
             val day = (index + 1).toString()
+
             CalendarDay(
                 day = day,
                 isSelected = selectedDay == day,
