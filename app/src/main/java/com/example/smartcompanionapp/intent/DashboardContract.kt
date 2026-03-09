@@ -1,6 +1,6 @@
 package com.example.smartcompanionapp.intent
 
-import com.example.smartcompanionapp.model.Announcement
+import com.example.smartcompanionapp.data.model.Announcement
 
 // 1. STATE: Represents everything visible on the screen at any given time
 data class DashboardState(

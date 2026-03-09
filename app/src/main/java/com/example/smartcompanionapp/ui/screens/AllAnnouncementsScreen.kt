@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.model.Announcement
+import com.example.smartcompanionapp.data.model.Announcement
 import com.example.smartcompanionapp.ui.theme.AppBackground
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 import java.text.SimpleDateFormat
