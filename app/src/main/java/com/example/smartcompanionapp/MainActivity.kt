@@ -8,10 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
-import com.example.smartcompanionapp.data.SessionManager
+import com.example.smartcompanionapp.data.database.TaskDatabase
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.navigation.AppNavigation
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.SmartCompanionAppTheme
+import com.example.smartcompanionapp.viewmodel.TaskViewModel
+import com.example.smartcompanionapp.viewmodel.TaskViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +33,15 @@ fun MainApp() {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val navController = rememberNavController()
-    
+
+    val database = remember {
+        TaskDatabase.getDatabase(context)
+    }
+
+    val taskViewModel: TaskViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = TaskViewModelFactory(database.taskDao())
+    )
+
     // Check if user is logged in
     val startDestination = if (sessionManager.isLoggedIn()) {
         Screen.Dashboard.route
@@ -40,6 +51,7 @@ fun MainApp() {
 
     AppNavigation(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
+        taskViewModel = taskViewModel
     )
 }

@@ -1,5 +1,7 @@
 package com.example.smartcompanionapp.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Checklist
@@ -27,6 +29,8 @@ import com.example.smartcompanionapp.data.repository.AnnouncementRepository
 import com.example.smartcompanionapp.ui.screens.*
 import com.example.smartcompanionapp.ui.theme.AppSurface
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
+import com.example.smartcompanionapp.viewmodel.TaskViewModel
+
 
 sealed class Screen(val route: String) {
     object GetStarted : Screen("get_started")
@@ -42,10 +46,12 @@ sealed class Screen(val route: String) {
     object Notifications : Screen("notifications")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    startDestination: String = Screen.GetStarted.route
+    startDestination: String = Screen.GetStarted.route,
+    taskViewModel: TaskViewModel
 ) {
     // ViewModel is hoisted to be shared between Dashboard and AllAnnouncements
     val context = LocalContext.current
@@ -92,13 +98,14 @@ fun AppNavigation(
             AllAnnouncementsScreen(navController, viewModel)
         }
         composable(Screen.Schedule.route) {
-            ScheduleScreen(navController)
+            // ✅ Pass taskViewModel here — ScheduleScreen needs it to filter and display tasks
+            ScheduleScreen(navController = navController, viewModel = taskViewModel)
         }
         composable(Screen.CampusInformation.route) {
             CampusInfoScreen(navController)
         }
         composable(Screen.Task.route) {
-            TaskScreen(navController)
+            TaskScreen(navController, taskViewModel)
         }
         composable(Screen.Options.route) {
             SettingsScreen(navController)
