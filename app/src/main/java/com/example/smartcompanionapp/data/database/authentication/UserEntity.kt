@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data.database
+package com.example.smartcompanionapp.data.database.authentication
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

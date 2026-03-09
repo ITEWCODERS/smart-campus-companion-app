@@ -1,7 +1,7 @@
 package com.example.smartcompanionapp.data
 
-import com.example.smartcompanionapp.data.database.AuthDao
-import com.example.smartcompanionapp.data.database.UserEntity
+import com.example.smartcompanionapp.data.database.authentication.AuthDao
+import com.example.smartcompanionapp.data.database.authentication.UserEntity
 
 class AuthRepository(private val authDao: AuthDao) {
 
