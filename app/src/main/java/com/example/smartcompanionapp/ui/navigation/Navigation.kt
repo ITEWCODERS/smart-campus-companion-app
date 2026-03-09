@@ -24,8 +24,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.smartcompanionapp.data.local.AppDatabase
 import com.example.smartcompanionapp.data.database.tasks.TaskDatabase
+import com.example.smartcompanionapp.data.database.announcement.AppDatabase
 import com.example.smartcompanionapp.data.repository.AnnouncementRepository
 import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.screens.*

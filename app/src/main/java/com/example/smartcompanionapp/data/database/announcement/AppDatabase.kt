@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data.local
+package com.example.smartcompanionapp.data.database.announcement
 
 import android.content.Context
 import androidx.room.Database
