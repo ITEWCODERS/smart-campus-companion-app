@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 // ✅ Now accepts TaskDao so tasks are saved to Room (persists across app restarts)
-class TaskViewModel(private val dao: TaskDao) : ViewModel() {
+class TaskViewModel(private val dao: TaskDao, private val userId: String) : ViewModel() {
 
     // ─────────────────────────────────────────────
     // IMMUTABLE UI STATE
@@ -25,7 +25,7 @@ class TaskViewModel(private val dao: TaskDao) : ViewModel() {
         // Load all tasks from Room when ViewModel is first created.
         // collect{} keeps listening — any DB change auto-updates the UI.
         viewModelScope.launch {
-            dao.getAllTasks().collect { tasks ->
+            dao.getAllTasks(userId).collect { tasks ->
                 _uiState.value = TaskUiState.Success(tasks)
             }
         }
@@ -48,6 +48,7 @@ class TaskViewModel(private val dao: TaskDao) : ViewModel() {
         viewModelScope.launch {
             dao.insertTask(
                 Task(
+                    userId      = userId,
                     title       = intent.title,
                     description = intent.description,
                     subject     = intent.subject,
