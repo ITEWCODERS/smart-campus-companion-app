@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data.database
+package com.example.smartcompanionapp.data.database.tasks
 
 import android.content.Context
 import androidx.room.Database
