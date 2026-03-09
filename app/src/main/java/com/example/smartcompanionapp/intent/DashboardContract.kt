@@ -13,4 +13,6 @@ data class DashboardState(
 sealed class DashboardIntent {
     object LoadData : DashboardIntent()
     data class DismissAnnouncement(val announcementId: Int) : DashboardIntent()
+    data class AddAnnouncement(val announcement: Announcement) : DashboardIntent()
+    data class DeleteAnnouncement(val announcement: Announcement) : DashboardIntent()
 }

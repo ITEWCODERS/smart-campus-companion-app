@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.smartcompanionapp.data.repository.AnnouncementRepository
 import com.example.smartcompanionapp.intent.DashboardIntent
 import com.example.smartcompanionapp.intent.DashboardState
+import com.example.smartcompanionapp.data.model.Announcement
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,16 +50,31 @@ class DashboardViewModel(private val repository: AnnouncementRepository) : ViewM
 
     fun processIntent(intent: DashboardIntent) {
         when (intent) {
-            // This intent is now primarily for refreshing data if needed.
             is DashboardIntent.LoadData -> {
-                // Logic to re-fetch data can be added here if necessary
+                // Logic to re-fetch data
             }
             is DashboardIntent.DismissAnnouncement -> {
-                // Mark as read in the database for future app launches
                 markAsRead(intent.announcementId)
-                // Add to our session-only dismissed set to hide it immediately
                 dismissedInSession.update { it + intent.announcementId }
             }
+            is DashboardIntent.AddAnnouncement -> {
+                addAnnouncement(intent.announcement)
+            }
+            is DashboardIntent.DeleteAnnouncement -> {
+                deleteAnnouncement(intent.announcement)
+            }
+        }
+    }
+
+    private fun addAnnouncement(announcement: Announcement) {
+        viewModelScope.launch {
+            repository.postAnnouncement(announcement)
+        }
+    }
+
+    private fun deleteAnnouncement(announcement: Announcement) {
+        viewModelScope.launch {
+            repository.deleteAnnouncement(announcement)
         }
     }
 

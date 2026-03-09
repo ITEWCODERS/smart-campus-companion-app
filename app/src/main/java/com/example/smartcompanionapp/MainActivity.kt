@@ -46,12 +46,9 @@ fun MainApp() {
         factory = TaskViewModelFactory(database.taskDao())
     )
 
-    // Check if user is logged in
-    val startDestination = if (sessionManager.isLoggedIn()) {
-        Screen.Dashboard.route
-    } else {
-        Screen.GetStarted.route
-    }
+    // Changed to always start at GetStarted for fresh launches if desired.
+    // Alternatively, to clear session on force stop, you'd need a different approach (e.g., non-persistent storage).
+    val startDestination = Screen.GetStarted.route
 
     AppNavigation(
         navController = navController,
