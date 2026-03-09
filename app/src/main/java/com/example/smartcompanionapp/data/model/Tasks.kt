@@ -12,6 +12,7 @@ import androidx.room.PrimaryKey
 data class Task(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val userId: String,
     val title: String,
     val description: String,  // Shown on TaskCard
     val subject: String,       // Shown on TaskCard and ScheduleCard
