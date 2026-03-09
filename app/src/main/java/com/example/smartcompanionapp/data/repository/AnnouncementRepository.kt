@@ -13,13 +13,30 @@ class AnnouncementRepository(private val dao: AnnouncementDao) {
         dao.markAsRead(id)
     }
 
+    suspend fun postAnnouncement(announcement: Announcement) {
+        dao.insertAnnouncements(listOf(announcement))
+    }
+
+    suspend fun deleteAnnouncement(announcement: Announcement) {
+        dao.deleteAnnouncement(announcement)
+    }
+
     suspend fun ensureDummyData() {
+        // Only insert if the database is currently empty
+        if (dao.getCount() > 0) return
+
         val dummyData = listOf(
+            Announcement(
+                title = "Urgent: Holiday Alert",
+                content = "Due to Holy week, all classes are cancelled.",
+                datePosted = System.currentTimeMillis(),
+                isRead = false 
+            ),
             Announcement(
                 title = "Urgent: Classes Suspended",
                 content = "Due to heavy rain, afternoon classes are suspended. Stay safe!",
                 datePosted = System.currentTimeMillis(),
-                isRead = false
+                isRead = false 
             ),
             Announcement(
                 title = "Library Renovation",
@@ -34,6 +51,6 @@ class AnnouncementRepository(private val dao: AnnouncementDao) {
                 isRead = true
             )
         )
-        dao.ensureDummyData(dummyData)
+        dao.insertAnnouncements(dummyData)
     }
 }
