@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data
+package com.example.smartcompanionapp.data.repository
 
 import com.example.smartcompanionapp.data.database.authentication.AuthDao
 import com.example.smartcompanionapp.data.database.authentication.UserEntity

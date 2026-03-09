@@ -3,7 +3,7 @@ package com.example.smartcompanionapp.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.smartcompanionapp.data.AuthRepository
+import com.example.smartcompanionapp.data.repository.AuthRepository
 import com.example.smartcompanionapp.data.database.authentication.AuthDatabase
 import com.example.smartcompanionapp.data.database.authentication.UserEntity
 import kotlinx.coroutines.flow.MutableStateFlow
