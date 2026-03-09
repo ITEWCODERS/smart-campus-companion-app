@@ -8,50 +8,73 @@ import com.example.smartcompanionapp.domain.TaskIntent
 import com.example.smartcompanionapp.domain.TaskUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
+// ✅ Now accepts TaskDao so tasks are saved to Room (persists across app restarts)
 class TaskViewModel(private val dao: TaskDao) : ViewModel() {
 
+    // ─────────────────────────────────────────────
+    // IMMUTABLE UI STATE
+    // ─────────────────────────────────────────────
+    // _uiState is private/mutable — only the ViewModel writes to it.
+    // uiState is the public read-only StateFlow the UI observes.
     private val _uiState = MutableStateFlow<TaskUiState>(TaskUiState.Loading)
     val uiState: StateFlow<TaskUiState> = _uiState
 
     init {
-        dao.getAllTasks()
-            .onEach { tasks ->
+        // Load all tasks from Room when ViewModel is first created.
+        // collect{} keeps listening — any DB change auto-updates the UI.
+        viewModelScope.launch {
+            dao.getAllTasks().collect { tasks ->
                 _uiState.value = TaskUiState.Success(tasks)
             }
-            .catch { exception ->
-                _uiState.value = TaskUiState.Error(exception.message ?: "An unknown error occurred")
-            }
-            .launchIn(viewModelScope)
+        }
     }
 
+    // ─────────────────────────────────────────────
+    // INTENT HANDLING
+    // ─────────────────────────────────────────────
+    // Single entry point for all UI actions.
+    // UI fires an intent → ViewModel handles it → Room updates → StateFlow emits → UI recomposes
     fun processIntent(intent: TaskIntent) {
         when (intent) {
-            is TaskIntent.AddTask -> addTask(intent.title, intent.description, intent.subject, intent.dueDate)
-            is TaskIntent.UpdateTask -> updateTask(intent.task, intent.title, intent.description, intent.subject, intent.dueDate)
-            is TaskIntent.DeleteTask -> deleteTask(intent.task)
+            is TaskIntent.AddTask    -> addTask(intent)
+            is TaskIntent.UpdateTask -> updateTask(intent)
+            is TaskIntent.DeleteTask -> deleteTask(intent)
         }
     }
 
-    private fun addTask(title: String, description: String, subject: String, dueDate: String) {
+    private fun addTask(intent: TaskIntent.AddTask) {
         viewModelScope.launch {
-            dao.insertTask(Task(title = title, description = description, subject = subject, dueDate = dueDate))
+            dao.insertTask(
+                Task(
+                    title       = intent.title,
+                    description = intent.description,
+                    subject     = intent.subject,
+                    date        = intent.date,
+                    dueDate     = intent.dueDate
+                )
+            )
         }
     }
 
-    private fun updateTask(task: Task, title: String, description: String, subject: String, dueDate: String) {
+    private fun updateTask(intent: TaskIntent.UpdateTask) {
         viewModelScope.launch {
-            dao.updateTask(task.copy(title = title, description = description, subject = subject, dueDate = dueDate))
+            dao.updateTask(
+                intent.original.copy(
+                    title       = intent.title,
+                    description = intent.description,
+                    subject     = intent.subject,
+                    date        = intent.date,
+                    dueDate     = intent.dueDate
+                )
+            )
         }
     }
 
-    private fun deleteTask(task: Task) {
+    private fun deleteTask(intent: TaskIntent.DeleteTask) {
         viewModelScope.launch {
-            dao.deleteTask(task)
+            dao.deleteTask(intent.task)
         }
     }
 }

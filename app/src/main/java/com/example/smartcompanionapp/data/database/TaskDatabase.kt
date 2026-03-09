@@ -6,11 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.smartcompanionapp.data.TaskDao
 import com.example.smartcompanionapp.data.model.Task
-import com.example.smartcompanionapp.data.model.Tasks
 
+// ✅ Removed Tasks::class — we only have ONE unified entity now
+// ✅ version bumped to 2 — required because Task schema changed (added date, subject, description)
+// ✅ fallbackToDestructiveMigration() — wipes old DB and starts fresh instead of crashing
 @Database(
-    entities = [Task::class, Tasks::class],
-    version = 1,
+    entities = [Task::class],
+    version = 2,
     exportSchema = false
 )
 abstract class TaskDatabase : RoomDatabase() {
@@ -27,7 +29,8 @@ abstract class TaskDatabase : RoomDatabase() {
                     context.applicationContext,
                     TaskDatabase::class.java,
                     "task_database"
-                ).build()
+                )
+                    .build()
                 INSTANCE = instance
                 instance
             }
