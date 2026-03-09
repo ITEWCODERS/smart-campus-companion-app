@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data
+package com.example.smartcompanionapp.data.model
 
 enum class UserRole {
     ADMIN, USER
