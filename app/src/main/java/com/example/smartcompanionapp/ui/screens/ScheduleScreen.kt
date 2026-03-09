@@ -1,5 +1,7 @@
 package com.example.smartcompanionapp.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,64 +23,120 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.data.model.Tasks
+import com.example.smartcompanionapp.data.model.Task
+import com.example.smartcompanionapp.domain.TaskUiState
 import com.example.smartcompanionapp.ui.theme.*
+import com.example.smartcompanionapp.viewmodel.TaskViewModel
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
+// ─────────────────────────────────────────────
+// MAIN SCHEDULE SCREEN
+// ─────────────────────────────────────────────
 /**
- * Main Schedule Screen displaying a calendar and tasks for the selected day.
+ * Displays a monthly calendar. When the user taps a day, it filters and shows
+ * only the tasks whose `date` field (scheduled date) matches the selected day
+ * in the current month (e.g. "15/01/2026").
+ *
  * @param navController Controller for navigation between screens.
+ * @param viewModel     Shared TaskViewModel — same instance used by TaskScreen,
+ *                      so tasks added there appear here automatically.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScheduleScreen(navController: NavController) {
+fun ScheduleScreen(
+    navController: NavController,
+    viewModel: TaskViewModel  // Receives the shared ViewModel to read tasks from
+) {
+    // ── STATE DRIVEN LIST RENDERING ──────────────────────────────────────────
+    // Observes the same StateFlow used by TaskScreen.
+    // Whenever a task is added/edited/deleted in TaskScreen, this screen
+    // automatically recomposes with the updated list — no manual refresh needed.
+    val uiState by viewModel.uiState.collectAsState()
 
-    // Sample tasks (in production, this should come from a repository / ViewModel)
+    // Current visible month (e.g. March 2026)
+    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    val monthFormatter = DateTimeFormatter.ofPattern("MMM yyyy")
 
+    // Currently selected day number (1–31)
+    var selectedDay by remember { mutableStateOf(1) }
 
-    // State for current month and selected day
-    var currentMonth by remember { mutableStateOf("Jan 2026") }
-    var selectedDay by remember { mutableStateOf("20") }
+    // Build the full "dd/MM/yyyy" string for the selected day so we can filter tasks
+    // e.g. day=5, month=March 2026 → "05/03/2026"
+    val selectedDateString = remember(selectedDay, currentMonth) {
+        String.format("%02d/%02d/%04d", selectedDay, currentMonth.monthValue, currentMonth.year)
+    }
 
     Scaffold(
-        containerColor = AppBackground, // Screen background color
-        topBar = {
-            ScheduleTopAppBar(navController)
-        },
+        containerColor = AppBackground,
+        topBar = { ScheduleTopAppBar(navController) },
         bottomBar = { BottomNavWithController(navController) }
     ) { padding ->
-
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
             MonthNavigation(
-                currentMonth = currentMonth,
-                onPrevious = { /* TODO: implement previous month logic */ },
-                onNext = { /* TODO: implement next month logic */ }
+                currentMonth = currentMonth.format(monthFormatter),
+                onPrevious = {
+                    currentMonth = currentMonth.minusMonths(1)
+                    selectedDay = 1 // Reset to day 1 when changing months
+                },
+                onNext = {
+                    currentMonth = currentMonth.plusMonths(1)
+                    selectedDay = 1
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Calendar grid (7 columns for 7 days a week)
-            CalendarGrid(selectedDay = selectedDay, onDaySelected = { selectedDay = it })
+            // Calendar grid — shows the correct number of days for the current month
+            CalendarGrid(
+                daysInMonth = currentMonth.lengthOfMonth(),
+                selectedDay = selectedDay.toString(),
+                onDaySelected = { selectedDay = it.toInt() }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Filter tasks by selected day
-//            val filteredTasks = tasks.filter { it.date == selectedDay }
-//
-//            if (filteredTasks.isEmpty()) {
-//                NoTasksPlaceholder()
-//            } else {
-//                TaskList(tasks = filteredTasks)
-//            }
-            NoTasksPlaceholder()
+            // ── STATE DRIVEN LIST RENDERING ───────────────────────────────────
+            // Reads from the shared UiState and filters tasks by the selected date.
+            // If the state is Success, filter tasks whose `date` matches selectedDateString.
+            // This re-runs automatically whenever selectedDay, currentMonth, or the task list changes.
+            when (val state = uiState) {
+                is TaskUiState.Loading -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                is TaskUiState.Success -> {
+                    // Filter tasks: only show tasks scheduled for the selected day
+                    // task.date is stored as "dd/MM/yyyy" — we match it to selectedDateString
+                    val filteredTasks = state.tasks.filter { it.date == selectedDateString }
+
+                    if (filteredTasks.isEmpty()) {
+                        NoTasksPlaceholder()
+                    } else {
+                        TaskList(tasks = filteredTasks)
+                    }
+                }
+
+                is TaskUiState.Error -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(state.message, color = Color.Red)
+                    }
+                }
+            }
         }
     }
 }
 
-/** Top App Bar for the Schedule screen */
+// ─────────────────────────────────────────────
+// TOP BAR
+// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleTopAppBar(navController: NavController) {
@@ -92,7 +150,10 @@ fun ScheduleTopAppBar(navController: NavController) {
     )
 }
 
-/** Month navigation row with previous and next buttons */
+// ─────────────────────────────────────────────
+// MONTH NAVIGATION
+// ─────────────────────────────────────────────
+// Simple row with prev/next buttons and the current month label.
 @Composable
 fun MonthNavigation(currentMonth: String, onPrevious: () -> Unit, onNext: () -> Unit) {
     Row(
@@ -108,9 +169,17 @@ fun MonthNavigation(currentMonth: String, onPrevious: () -> Unit, onNext: () -> 
     }
 }
 
-/** Calendar grid showing 30 days and highlighting the selected day */
+// ─────────────────────────────────────────────
+// CALENDAR GRID
+// ─────────────────────────────────────────────
+// Renders a 7-column grid with the correct number of days for the month.
+// Highlights the currently selected day.
 @Composable
-fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
+fun CalendarGrid(
+    daysInMonth: Int,
+    selectedDay: String,
+    onDaySelected: (String) -> Unit
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(7),
         modifier = Modifier
@@ -119,7 +188,7 @@ fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(30) { index ->
+        items(daysInMonth) { index ->
             val day = (index + 1).toString()
             CalendarDay(
                 day = day,
@@ -130,7 +199,10 @@ fun CalendarGrid(selectedDay: String, onDaySelected: (String) -> Unit) {
     }
 }
 
-/** Individual day in the calendar */
+// ─────────────────────────────────────────────
+// CALENDAR DAY
+// ─────────────────────────────────────────────
+// Individual circle cell. Highlighted in UniPrimary when selected.
 @Composable
 fun CalendarDay(day: String, isSelected: Boolean, onClick: () -> Unit) {
     Box(
@@ -151,23 +223,29 @@ fun CalendarDay(day: String, isSelected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** LazyColumn for displaying a list of tasks */
+// ─────────────────────────────────────────────
+// TASK LIST
+// ─────────────────────────────────────────────
+// Scrollable list of ScheduleCards for the filtered tasks.
+// Used by ScheduleScreen after filtering state.tasks by the selected date.
 @Composable
-fun TaskList(tasks: List<Tasks>) {
+fun TaskList(tasks: List<Task>) {
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(tasks) { task ->
+        items(tasks, key = { it.id }) { task ->
             ScheduleCard(task)
         }
-
     }
 }
 
-/** Card representing a single task */
+// ─────────────────────────────────────────────
+// SCHEDULE CARD
+// ─────────────────────────────────────────────
+// Card showing a single task's title and due date in the schedule view.
 @Composable
-fun ScheduleCard(task: Tasks) {
+fun ScheduleCard(task: Task) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -177,23 +255,25 @@ fun ScheduleCard(task: Tasks) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Small dot indicator
             Box(
                 modifier = Modifier
                     .size(12.dp)
                     .background(UniPrimary, CircleShape)
             )
             Spacer(modifier = Modifier.width(12.dp))
-
             Column {
                 Text(task.title, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Text(task.dueDate, fontSize = 12.sp, color = TextSecondary)
+                Text("Subject: ${task.subject}", fontSize = 12.sp, color = TextSecondary)
+                Text("Due: ${task.dueDate}", fontSize = 12.sp, color = TextSecondary)
             }
         }
     }
 }
 
-/** Placeholder when no tasks are scheduled for the selected day */
+// ─────────────────────────────────────────────
+// EMPTY STATE PLACEHOLDER
+// ─────────────────────────────────────────────
+// Shown when no tasks are scheduled for the selected day.
 @Composable
 fun NoTasksPlaceholder() {
     Box(
@@ -204,44 +284,36 @@ fun NoTasksPlaceholder() {
     }
 }
 
-/** Bottom navigation bar for the app */
+// ─────────────────────────────────────────────
+// BOTTOM NAVIGATION BAR
+// ─────────────────────────────────────────────
 @Composable
 fun BottomNavWithController(navController: NavController) {
     NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // 1. Home
         NavigationBarItem(
-            selected = true,
+            selected = false,
             onClick = { navController.navigate("dashboard") },
             icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
             label = { Text("Home") }
         )
-
-
-        //changed to nav controller to navigate
-        // 2. Schedule
         NavigationBarItem(
-            selected = false,
+            selected = true,
             onClick = { navController.navigate("schedule") },
             icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
             label = { Text("Schedule") }
         )
-
-        // 3. Task
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("task") },
             icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
             label = { Text("Tasks") }
         )
-
-        // 5. Campus Info
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("campusInfo") },
             icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
             label = { Text("Info") }
         )
-        // 6. Settings
         NavigationBarItem(
             selected = false,
             onClick = { navController.navigate("settings") },
