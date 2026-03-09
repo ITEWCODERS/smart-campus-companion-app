@@ -278,12 +278,12 @@ fun AddTaskDialog(
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
-                    label = { Text("Scheduled Date (dd/MM/yyyy)") },
+                    label = { Text("Starting Date") },
                     readOnly = true,
                     trailingIcon = {
                         Icon(
                             Icons.Rounded.DateRange,
-                            contentDescription = "Select scheduled date",
+                            contentDescription = "Select starting date",
                             modifier = Modifier.clickable { showDatePicker = true }
                         )
                     }
@@ -424,12 +424,12 @@ fun EditTaskDialog(
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
-                    label = { Text("Scheduled Date (dd/MM/yyyy)") },
+                    label = { Text("Starting Date") },
                     readOnly = true,
                     trailingIcon = {
                         Icon(
                             Icons.Rounded.DateRange,
-                            contentDescription = "Select scheduled date",
+                            contentDescription = "Select starting date",
                             modifier = Modifier.clickable { showDatePicker = true }
                         )
                     }
@@ -527,7 +527,7 @@ fun TaskCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 // Shows the scheduled date (when it was added/scheduled)
                 Text(
-                    text = "Scheduled: ${task.date}",
+                    text = "Starting: ${task.date}",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
