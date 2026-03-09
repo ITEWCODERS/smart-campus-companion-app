@@ -1,5 +1,7 @@
 package com.example.smartcompanionapp.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Checklist
@@ -34,6 +36,7 @@ sealed class Screen(val route: String) {
     object Notifications : Screen("notifications")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -60,7 +63,8 @@ fun AppNavigation(
             DashboardScreen(navController)
         }
         composable(Screen.Schedule.route) {
-            ScheduleScreen(navController)
+            // ✅ Pass taskViewModel here — ScheduleScreen needs it to filter and display tasks
+            ScheduleScreen(navController = navController, viewModel = taskViewModel)
         }
         composable(Screen.CampusInformation.route) {
             CampusInfoScreen(navController)
