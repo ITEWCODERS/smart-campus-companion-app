@@ -113,14 +113,14 @@ fun ScheduleScreen(
                 }
 
                 is TaskUiState.Success -> {
-                    // Filter tasks: only show tasks scheduled for the selected day
-                    // task.date is stored as "dd/MM/yyyy" — we match it to selectedDateString
-                    val filteredTasks = state.tasks.filter { it.date == selectedDateString }
+                    // Filter tasks: show tasks scheduled for the selected day OR due on the selected day
+                    // task.date and task.dueDate are stored as "dd/MM/yyyy"
+                    val filteredTasks = state.tasks.filter { it.date == selectedDateString || it.dueDate == selectedDateString }
 
                     if (filteredTasks.isEmpty()) {
                         NoTasksPlaceholder()
                     } else {
-                        TaskList(tasks = filteredTasks)
+                        TaskList(tasks = filteredTasks, selectedDateString = selectedDateString)
                     }
                 }
 
@@ -229,13 +229,13 @@ fun CalendarDay(day: String, isSelected: Boolean, onClick: () -> Unit) {
 // Scrollable list of ScheduleCards for the filtered tasks.
 // Used by ScheduleScreen after filtering state.tasks by the selected date.
 @Composable
-fun TaskList(tasks: List<Task>) {
+fun TaskList(tasks: List<Task>, selectedDateString: String) {
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(tasks, key = { it.id }) { task ->
-            ScheduleCard(task)
+            ScheduleCard(task, selectedDateString)
         }
     }
 }
@@ -243,9 +243,11 @@ fun TaskList(tasks: List<Task>) {
 // ─────────────────────────────────────────────
 // SCHEDULE CARD
 // ─────────────────────────────────────────────
-// Card showing a single task's title and due date in the schedule view.
+// Card showing a single task's title and date/due date in the schedule view.
 @Composable
-fun ScheduleCard(task: Task) {
+fun ScheduleCard(task: Task, selectedDateString: String) {
+    val isStartingDate = task.date == selectedDateString
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -264,7 +266,11 @@ fun ScheduleCard(task: Task) {
             Column {
                 Text(task.title, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                 Text("Subject: ${task.subject}", fontSize = 12.sp, color = TextSecondary)
-                Text("Due: ${task.dueDate}", fontSize = 12.sp, color = TextSecondary)
+                if (isStartingDate) {
+                    Text("Starting at: ${task.date}", fontSize = 12.sp, color = TextSecondary)
+                } else {
+                    Text("Due: ${task.dueDate}", fontSize = 12.sp, color = TextSecondary)
+                }
             }
         }
     }
