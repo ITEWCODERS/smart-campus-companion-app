@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.smartcompanionapp.data.model.Announcement
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.intent.DashboardIntent
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
@@ -40,6 +42,9 @@ fun DashboardScreen(
     onViewAllClick: () -> Unit // New parameter for navigation
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val username = sessionManager.getUsername() ?: "User"
 
     Scaffold(
         containerColor = AppBackground,
@@ -73,7 +78,7 @@ fun DashboardScreen(
             // Header
             item {
                 Box(modifier = Modifier.padding(horizontal = 24.dp)) {
-                    StudentHeader()
+                    StudentHeader(username = username)
                 }
             }
 
@@ -176,7 +181,7 @@ fun AnnouncementList(newsList: List<Announcement>) {
 }
 
 @Composable
-fun StudentHeader() {
+fun StudentHeader(username: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -185,7 +190,7 @@ fun StudentHeader() {
         Column {
             Text("Jan 15, Wednesday", fontSize = 13.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Hi, Alex", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+            Text("Hi, $username", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             Text("Computer Science • Year 3", fontSize = 14.sp, color = TextSecondary)
         }
         Box(Modifier.size(48.dp).clip(CircleShape).background(Color.LightGray), contentAlignment = Alignment.Center) {

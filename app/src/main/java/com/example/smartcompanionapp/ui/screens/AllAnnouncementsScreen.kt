@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Announcement
 import com.example.smartcompanionapp.intent.DashboardIntent
 import com.example.smartcompanionapp.ui.theme.AppBackground
+import com.example.smartcompanionapp.ui.theme.UniPrimary
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -149,9 +150,15 @@ fun AddAnnouncementBottomSheet(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = title.isNotBlank() && content.isNotBlank()
+                enabled = title.isNotBlank() && content.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = UniPrimary,
+                    contentColor = Color.White,
+                    disabledContainerColor = Color.LightGray,
+                    disabledContentColor = Color.White
+                )
             ) {
-                Text("Post Announcement")
+                Text("Post Announcement", color = Color.White)
             }
             
             Spacer(modifier = Modifier.height(16.dp))
