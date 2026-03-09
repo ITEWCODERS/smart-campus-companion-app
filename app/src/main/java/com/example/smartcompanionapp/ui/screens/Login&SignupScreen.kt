@@ -33,8 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.data.UserRole
 import com.example.smartcompanionapp.data.session.SessionManager
+import com.example.smartcompanionapp.data.model.User
+import com.example.smartcompanionapp.data.repository.UserRepository
+import com.example.smartcompanionapp.data.model.UserRole
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.ui.viewmodel.AuthState

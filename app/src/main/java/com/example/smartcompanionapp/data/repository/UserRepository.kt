@@ -1,6 +1,8 @@
-package com.example.smartcompanionapp.data
+package com.example.smartcompanionapp.data.repository
 
 import android.content.Context
+import com.example.smartcompanionapp.data.model.User
+import com.example.smartcompanionapp.data.model.UserRole
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -18,7 +20,7 @@ object UserRepository {
     fun init(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val usersJson = prefs.getString(KEY_USERS, null)
-        
+
         users.clear()
         if (usersJson == null) {
             users.addAll(defaultUsers)
@@ -27,13 +29,15 @@ object UserRepository {
             val jsonArray = JSONArray(usersJson)
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
-                users.add(User(
-                    obj.getString("username"),
-                    obj.getString("password"),
-                    UserRole.valueOf(obj.getString("role")),
-                    obj.optString("email", ""),
-                    obj.optString("phoneNumber", "")
-                ))
+                users.add(
+                    User(
+                        obj.getString("username"),
+                        obj.getString("password"),
+                        UserRole.valueOf(obj.getString("role")),
+                        obj.optString("email", ""),
+                        obj.optString("phoneNumber", "")
+                    )
+                )
             }
         }
     }
