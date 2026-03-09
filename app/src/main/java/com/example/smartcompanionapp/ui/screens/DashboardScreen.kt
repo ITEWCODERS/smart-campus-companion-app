@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.smartcompanionapp.model.Announcement
+import com.example.smartcompanionapp.data.model.Announcement
 import com.example.smartcompanionapp.intent.DashboardIntent
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel

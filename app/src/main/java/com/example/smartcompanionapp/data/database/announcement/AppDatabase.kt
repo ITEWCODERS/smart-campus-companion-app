@@ -1,11 +1,11 @@
-package com.example.smartcompanionapp.data.local
+package com.example.smartcompanionapp.data.database.announcement
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.smartcompanionapp.data.local.dao.AnnouncementDao
-import com.example.smartcompanionapp.model.Announcement
+import com.example.smartcompanionapp.data.database.announcement.dao.AnnouncementDao
+import com.example.smartcompanionapp.data.model.Announcement
 
 @Database(entities = [Announcement::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
