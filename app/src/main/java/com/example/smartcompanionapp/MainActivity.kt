@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
-import com.example.smartcompanionapp.data.database.TaskDatabase
+import com.example.smartcompanionapp.data.database.tasks.TaskDatabase
 import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.navigation.AppNavigation
 import com.example.smartcompanionapp.ui.navigation.Screen
