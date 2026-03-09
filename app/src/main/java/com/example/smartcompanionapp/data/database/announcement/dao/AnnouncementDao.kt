@@ -1,4 +1,4 @@
-package com.example.smartcompanionapp.data.local.dao
+package com.example.smartcompanionapp.data.database.announcement.dao
 
 import androidx.room.Dao
 import androidx.room.Insert

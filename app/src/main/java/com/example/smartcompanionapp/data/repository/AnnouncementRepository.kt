@@ -1,6 +1,6 @@
 package com.example.smartcompanionapp.data.repository
 
-import com.example.smartcompanionapp.data.local.dao.AnnouncementDao
+import com.example.smartcompanionapp.data.database.announcement.dao.AnnouncementDao
 import com.example.smartcompanionapp.model.Announcement
 import kotlinx.coroutines.flow.Flow
 
