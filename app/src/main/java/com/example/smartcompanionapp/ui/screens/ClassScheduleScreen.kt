@@ -52,7 +52,7 @@ val mockSchedules = listOf(
 // Schedule Screen UI
 // --------------------
 @Composable
-fun ScheduleScreen() {
+fun ClassScheduleScreen() { // Renamed to avoid confusion with ScheduleScreen.kt
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,6 +61,7 @@ fun ScheduleScreen() {
         Text(
             text = "Today's Schedule",
             style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -81,21 +82,28 @@ fun ScheduleCard(schedule: Schedule) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = schedule.title,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = schedule.time,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = schedule.description,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -106,8 +114,8 @@ fun ScheduleCard(schedule: Schedule) {
 // --------------------
 @Preview(showBackground = true)
 @Composable
-fun ScheduleScreenPreview() {
+fun ClassScheduleScreenPreview() {
     SmartCompanionAppTheme {
-        ScheduleScreen()
+        ClassScheduleScreen()
     }
 }

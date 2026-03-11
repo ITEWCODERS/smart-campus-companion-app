@@ -34,7 +34,7 @@ import com.example.smartcompanionapp.ui.theme.*
 fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = BackgroundWhite
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = Modifier
@@ -54,7 +54,7 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                         imageVector = Icons.Default.School,
                         contentDescription = null,
                         modifier = Modifier.size(180.dp),
-                        tint = BrandBlue
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -67,7 +67,7 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                     text = "Smart Campus Companion",
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextBlack,
+                        color = MaterialTheme.colorScheme.onBackground,
                         letterSpacing = (-0.5).sp
                     ),
                     textAlign = TextAlign.Center
@@ -78,7 +78,7 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                 Text(
                     text = "A modern minimal academic experience designed for your daily campus life.",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 24.sp
                     ),
                     textAlign = TextAlign.Center,
@@ -91,9 +91,9 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(BrandBlue))
-                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(BrandBlueLight))
-                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(BrandBlueLight))
+                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary))
+                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)))
+                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)))
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -120,7 +120,7 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
 
                 Text(
                     text = "Create an account",
-                    color = BrandBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier
                         .clickable { onSignUp() }
@@ -146,7 +146,7 @@ fun LoginScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundWhite)
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -155,7 +155,7 @@ fun LoginScreen(navController: NavController) {
         Text(
             text = "Login",
             style = MaterialTheme.typography.headlineLarge,
-            color = TextBlack
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -173,8 +173,8 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BrandBlue,
-                unfocusedBorderColor = Color.LightGray
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline
             )
         )
 
@@ -195,8 +195,8 @@ fun LoginScreen(navController: NavController) {
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = BrandBlue,
-                unfocusedBorderColor = Color.LightGray
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline
             )
         )
 
@@ -244,10 +244,10 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Row {
-            Text("Don't have an account? ", color = TextGray)
+            Text("Don't have an account? ", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 text = "Create an account",
-                color = BrandBlue,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable {
                     navController.navigate(Screen.Signup.route)
@@ -271,13 +271,13 @@ fun SignUpScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundWhite)
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Signup", style = MaterialTheme.typography.headlineLarge, color = TextBlack)
+        Text("Signup", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -359,10 +359,10 @@ fun SignUpScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Row {
-            Text("Already have an account? ", color = TextGray)
+            Text("Already have an account? ", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 text = "Login",
-                color = BrandBlue,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable {
                     navController.popBackStack()
@@ -384,8 +384,8 @@ fun RoleSelector(selectedRole: UserRole, onRoleSelected: (UserRole) -> Unit) {
             onClick = { onRoleSelected(UserRole.USER) },
             label = { Text("User") },
             colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = BrandBlueLight,
-                selectedLabelColor = BrandBlue
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
         Spacer(modifier = Modifier.width(16.dp))
@@ -394,8 +394,8 @@ fun RoleSelector(selectedRole: UserRole, onRoleSelected: (UserRole) -> Unit) {
             onClick = { onRoleSelected(UserRole.ADMIN) },
             label = { Text("Admin") },
             colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = BrandBlueLight,
-                selectedLabelColor = BrandBlue
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
     }
