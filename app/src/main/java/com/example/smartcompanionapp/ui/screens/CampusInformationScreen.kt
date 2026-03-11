@@ -1,8 +1,5 @@
 package com.example.smartcompanionapp.ui.screens
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,11 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.School
-import androidx.compose.material.icons.rounded.Task
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,11 +18,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.R
-import com.example.smartcompanionapp.ui.theme.AppSurface
+import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 
 data class Department(
     val name: String,
@@ -108,19 +99,19 @@ fun CampusInfoScreen(navController: NavController) {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Black
+                            contentDescription = "Back"
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF0F0F0),
-                    titleContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         } ,
-        bottomBar = { BottomNavWithController(navController) },
-        containerColor = Color(0xFFF0F0F0)
+        bottomBar = { CampusBottomNav(navController) },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -139,7 +130,7 @@ fun CampusInfoScreen(navController: NavController) {
 @Composable
 fun DepartmentCardUI(department: Department) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
@@ -164,7 +155,7 @@ fun DepartmentCardUI(department: Department) {
                     Text(
                         text = department.acronym,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Color(0xFF006400),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -173,17 +164,18 @@ fun DepartmentCardUI(department: Department) {
                     text = department.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                 )
 
                 Text(
                     text = department.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                 Spacer(modifier = Modifier.height(12.dp))
 
                 ContactLine(icon = Icons.Default.Email, text = department.email)
@@ -207,9 +199,7 @@ fun ContactLine(icon: ImageVector, text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
-
-

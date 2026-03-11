@@ -25,7 +25,7 @@ fun NotificationsScreen(navController: NavController) {
     var events by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = AppBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("Notifications") },
@@ -35,7 +35,9 @@ fun NotificationsScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = AppSurface
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -51,6 +53,7 @@ fun NotificationsScreen(navController: NavController) {
                 Text(
                     text = "Notification preferences",
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
@@ -73,7 +76,8 @@ private fun NotificationToggle(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
-        color = AppSurface
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -89,14 +93,14 @@ private fun NotificationToggle(
             Text(
                 text = label,
                 modifier = Modifier.weight(1f),
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Switch(
                 checked = checked,
                 onCheckedChange = onChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = UniPrimary,
-                    checkedTrackColor = UniPrimary.copy(alpha = 0.38f)
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
                 )
             )
         }
