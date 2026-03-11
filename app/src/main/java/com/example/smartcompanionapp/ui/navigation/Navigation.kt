@@ -6,10 +6,7 @@ import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -18,7 +15,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.smartcompanionapp.ui.screens.*
-import com.example.smartcompanionapp.ui.theme.AppSurface
 
 sealed class Screen(val route: String) {
     object GetStarted : Screen("get_started")
@@ -29,14 +25,15 @@ sealed class Screen(val route: String) {
     object CampusInformation : Screen("campusInfo")
     object Task : Screen("task")
     object Options : Screen("settings")
-
     object Notifications : Screen("notifications")
 }
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    startDestination: String = Screen.GetStarted.route
+    startDestination: String = Screen.GetStarted.route,
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -67,9 +64,12 @@ fun AppNavigation(
             TaskScreen(navController)
         }
         composable(Screen.Options.route) {
-            SettingsScreen(navController)
+            SettingsScreen(
+                navController = navController,
+                isDarkMode = isDarkMode,
+                onDarkModeChange = onDarkModeChange
+            )
         }
-
         composable(Screen.Notifications.route) {
             NotificationsScreen(navController)
         }
@@ -81,7 +81,10 @@ fun CampusBottomNav(navController: NavController) {
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route
 
-    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
+    ) {
         NavigationBarItem(
             selected = currentRoute == Screen.Dashboard.route,
             onClick = {
