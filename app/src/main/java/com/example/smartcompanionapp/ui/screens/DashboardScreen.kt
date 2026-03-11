@@ -21,33 +21,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.smartcompanionapp.ui.theme.ActionEventsBg
-import com.example.smartcompanionapp.ui.theme.ActionEventsIcon
-import com.example.smartcompanionapp.ui.theme.ActionLibraryBg
-import com.example.smartcompanionapp.ui.theme.ActionLibraryIcon
-import com.example.smartcompanionapp.ui.theme.ActionMapBg
-import com.example.smartcompanionapp.ui.theme.ActionMapIcon
-import com.example.smartcompanionapp.ui.theme.ActionShuttleBg
-import com.example.smartcompanionapp.ui.theme.ActionShuttleIcon
-import com.example.smartcompanionapp.ui.theme.AlertBg
-import com.example.smartcompanionapp.ui.theme.AlertText
-import com.example.smartcompanionapp.ui.theme.AppBackground
-import com.example.smartcompanionapp.ui.theme.AppSurface
-import com.example.smartcompanionapp.ui.theme.EventInfoBg
-import com.example.smartcompanionapp.ui.theme.EventInfoText
-import com.example.smartcompanionapp.ui.theme.TextPrimary
-import com.example.smartcompanionapp.ui.theme.TextSecondary
-import com.example.smartcompanionapp.ui.theme.UniAccent
-import com.example.smartcompanionapp.ui.theme.UniPrimary
-import com.example.smartcompanionapp.ui.theme.UniSecondary
-
-
+import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
+import com.example.smartcompanionapp.ui.theme.*
 
 @Composable
 fun DashboardScreen(navController: NavController){
-    //added nav controller
     Scaffold(
-        containerColor = AppBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = { CampusBottomNav(navController) }
     )
     { paddingValues ->
@@ -75,7 +55,6 @@ fun DashboardScreen(navController: NavController){
             // 3. Announcements
             item {
                 SectionTitle(title = "Campus News", action = "View All")
-                Spacer(modifier = Modifier.height(12.dp))
                 AnnouncementList()
             }
 
@@ -87,12 +66,12 @@ fun DashboardScreen(navController: NavController){
                             text = "Upcoming Deadlines",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         DeadlineItem("Physics Lab Report", "Today, 11:59 PM", UniAccent)
                         Spacer(modifier = Modifier.height(12.dp))
-                        DeadlineItem("History Essay", "Tomorrow, 10:00 AM", UniPrimary)
+                        DeadlineItem("History Essay", "Tomorrow, 10:00 AM", MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -113,7 +92,7 @@ fun StudentHeader() {
             Text(
                 text = "Jan 15, Wednesday",
                 fontSize = 13.sp,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -121,12 +100,12 @@ fun StudentHeader() {
                 text = "Hi, Alex",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = "Computer Science • Year 3",
                 fontSize = 14.sp,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -134,13 +113,13 @@ fun StudentHeader() {
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Rounded.Person,
                 contentDescription = "Profile",
-                tint = Color.White
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -149,7 +128,7 @@ fun StudentHeader() {
 @Composable
 fun NextClassCard() {
     val gradient = Brush.linearGradient(
-        colors = listOf(UniPrimary, UniSecondary)
+        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
     )
 
     Card(
@@ -167,11 +146,16 @@ fun NextClassCard() {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Badge(
-                        containerColor = Color.White.copy(alpha = 0.2f),
-                        contentColor = Color.White
+                    Surface(
+                        color = Color.White.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Next Class", modifier = Modifier.padding(4.dp))
+                        Text(
+                            "Next Class",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
                     }
                     Text(
                         text = "10:00 AM",
@@ -234,11 +218,11 @@ fun SectionTitle(title: String, action: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(text = title, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Text(
             text = action,
             fontSize = 14.sp,
-            color = UniPrimary,
+            color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.clickable { }
         )
@@ -276,7 +260,7 @@ fun AnnouncementList() {
 fun AnnouncementCard(category: String, title: String, date: String, color: Color, textColor: Color) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AppSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.width(260.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -286,37 +270,41 @@ fun AnnouncementCard(category: String, title: String, date: String, color: Color
                 text = title,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = date, fontSize = 12.sp, color = TextSecondary)
+            Text(text = date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
 fun DeadlineItem(task: String, due: String, indicatorColor: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(AppSurface, RoundedCornerShape(12.dp))
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
     ) {
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .clip(CircleShape)
-                .background(indicatorColor)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(text = task, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-            Text(text = "Due: $due", fontSize = 12.sp, color = TextSecondary)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(indicatorColor)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(text = task, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = "Due: $due", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Spacer(modifier = Modifier.weight(1f))
-        Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = Color.LightGray)
     }
 }
 
@@ -332,57 +320,8 @@ fun ContainerBadge(text: String, bgColor: Color, textColor: Color) {
     }
 }
 
-@Composable
-//added nav controller
-fun CampusBottomNav(navController: NavController) {
-    NavigationBar(containerColor = AppSurface, tonalElevation = 8.dp) {
-        // changed this one so we can go back to home
-        // 1. Home
-        NavigationBarItem(
-            selected = true,
-            onClick = { navController.navigate("dashboard") },
-            icon = { Icon(Icons.Rounded.Home, contentDescription = "Home") },
-            label = { Text("Home") }
-        )
-
-
-        //changed to nav controller to navigate
-        // 2. Schedule
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("schedule") },
-            icon = { Icon(Icons.Rounded.CalendarMonth, contentDescription = "Schedule") },
-            label = { Text("Schedule") }
-        )
-
-        // 3. Task
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("task") },
-            icon = { Icon(Icons.Rounded.Checklist, contentDescription = "Tasks") },
-            label = { Text("Tasks") }
-        )
-
-        // 5. Campus Info
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("campusInfo") },
-            icon = { Icon(Icons.Rounded.Info, contentDescription = "Campus Info") },
-            label = { Text("Info") }
-        )
-        // 6. Settings
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate("settings") },
-            icon = { Icon(Icons.Rounded.Settings, contentDescription = "Settings") },
-            label = { Text("Settings") }
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun DashboardScreenPreview() {
     DashboardScreen(navController = androidx.navigation.compose.rememberNavController())
 }
-
