@@ -27,12 +27,16 @@ import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(
+    navController: NavController,
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit
+) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
     Scaffold(
-        containerColor = AppBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -50,7 +54,7 @@ fun SettingsScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = AppSurface
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         }, bottomBar = { CampusBottomNav(navController) },
@@ -85,13 +89,12 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.Rounded.DarkMode,
                     title = "Dark mode",
                     trailing = {
-                        var checked by remember { mutableStateOf(true) }
                         Switch(
-                            checked = checked,
-                            onCheckedChange = { checked = it },
+                            checked = isDarkMode,
+                            onCheckedChange = onDarkModeChange,
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = UniPrimary,
-                                checkedTrackColor = UniPrimary.copy(alpha = 0.38f)
+                                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
                             )
                         )
                     }
@@ -127,7 +130,7 @@ private fun SettingsCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
-        color = AppSurface,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 1.dp
     ) {
         Row(
@@ -137,7 +140,7 @@ private fun SettingsCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = UniPrimary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(26.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
@@ -146,13 +149,13 @@ private fun SettingsCard(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         fontSize = 13.sp,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -162,7 +165,7 @@ private fun SettingsCard(
                 Icon(
                     Icons.Rounded.ChevronRight,
                     contentDescription = null,
-                    tint = TextSecondary
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -172,5 +175,9 @@ private fun SettingsCard(
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsScreen(navController = androidx.navigation.compose.rememberNavController())
+    SettingsScreen(
+        navController = androidx.navigation.compose.rememberNavController(),
+        isDarkMode = false,
+        onDarkModeChange = {}
+    )
 }
