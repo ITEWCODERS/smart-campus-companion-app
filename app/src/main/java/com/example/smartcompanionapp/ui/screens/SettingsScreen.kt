@@ -1,6 +1,7 @@
 package com.example.smartcompanionapp.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,10 @@ import com.example.smartcompanionapp.ui.theme.*
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
+    val systemDark = isSystemInDarkTheme()
+    
+    val isDark = isDarkModePref ?: systemDark
 
     Scaffold(
         containerColor = AppBackground,
@@ -85,10 +90,9 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.Rounded.DarkMode,
                     title = "Dark mode",
                     trailing = {
-                        var checked by remember { mutableStateOf(true) }
                         Switch(
-                            checked = checked,
-                            onCheckedChange = { checked = it },
+                            checked = isDark,
+                            onCheckedChange = { sessionManager.setDarkMode(it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = UniPrimary,
                                 checkedTrackColor = UniPrimary.copy(alpha = 0.38f)
