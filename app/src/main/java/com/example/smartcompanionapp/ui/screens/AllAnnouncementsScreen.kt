@@ -17,8 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Announcement
 import com.example.smartcompanionapp.intent.DashboardIntent
-import com.example.smartcompanionapp.ui.theme.AppBackground
-import com.example.smartcompanionapp.ui.theme.UniPrimary
+import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -43,19 +42,20 @@ fun AllAnnouncementsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.Black
+                            tint = TextPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF0F0F0)
+                    containerColor = AppSurface,
+                    titleContentColor = TextPrimary
                 )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showSheet = true },
-                containerColor = MaterialTheme.colorScheme.primary,
+                containerColor = UniPrimary,
                 contentColor = Color.White
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add News")
@@ -110,7 +110,8 @@ fun AddAnnouncementBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle() }
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = AppSurface
     ) {
         Column(
             modifier = Modifier
@@ -122,7 +123,8 @@ fun AddAnnouncementBottomSheet(
             Text(
                 "Post New Announcement",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
 
             OutlinedTextField(
@@ -130,7 +132,13 @@ fun AddAnnouncementBottomSheet(
                 onValueChange = { title = it },
                 label = { Text("Title") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedLabelColor = UniPrimary,
+                    unfocusedLabelColor = TextSecondary
+                )
             )
 
             OutlinedTextField(
@@ -140,7 +148,13 @@ fun AddAnnouncementBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                maxLines = 5
+                maxLines = 5,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedLabelColor = UniPrimary,
+                    unfocusedLabelColor = TextSecondary
+                )
             )
 
             Button(
@@ -154,11 +168,11 @@ fun AddAnnouncementBottomSheet(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = UniPrimary,
                     contentColor = Color.White,
-                    disabledContainerColor = Color.LightGray,
+                    disabledContainerColor = TextSecondary.copy(alpha = 0.3f),
                     disabledContentColor = Color.White
                 )
             ) {
-                Text("Post Announcement", color = Color.White)
+                Text("Post Announcement")
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -177,7 +191,7 @@ fun FullWidthAnnouncementCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = AppSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -190,7 +204,7 @@ fun FullWidthAnnouncementCard(
                     text = news.title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF006400),
+                    color = UniPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onDelete) {
@@ -204,15 +218,15 @@ fun FullWidthAnnouncementCard(
             Text(
                 text = dateString,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = TextSecondary
             )
             Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
+            HorizontalDivider(thickness = 0.5.dp, color = TextSecondary.copy(alpha = 0.2f))
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = news.content,
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color.DarkGray
+                color = TextPrimary
             )
         }
     }
