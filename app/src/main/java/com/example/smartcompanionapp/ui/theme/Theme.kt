@@ -16,31 +16,33 @@ private val DarkColorScheme = darkColorScheme(
     secondary = BrandBlueDark,
     tertiary = DeadlineOrange,
     background = Color(0xFF121212),
-    surface = Color(0xFF121212),
+    surface = Color(0xFF1E1E1E), // Slightly lighter than background for cards/surfaces
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
     onBackground = Color.White,
     onSurface = Color.White,
+    onSurfaceVariant = Color(0xFFB0B0B0) // For secondary text
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = BrandBlue,
     secondary = BrandBlueDark,
     tertiary = DeadlineOrange,
-    background = BackgroundSoft,
+    background = Color(0xFFF0F0F0), // Matching your existing hardcoded light colors
     surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
     onBackground = TextBlack,
     onSurface = TextBlack,
+    onSurfaceVariant = TextGray
 )
 
 @Composable
 fun SmartCompanionAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Disabled dynamic color to strictly follow your requested theme
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
