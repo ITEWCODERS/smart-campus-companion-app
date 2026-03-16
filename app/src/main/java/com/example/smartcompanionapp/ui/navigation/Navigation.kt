@@ -24,8 +24,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.smartcompanionapp.data.database.tasks.TaskDatabase
 import com.example.smartcompanionapp.data.database.announcement.AppDatabase
+import com.example.smartcompanionapp.data.database.tasks.TaskDatabase
 import com.example.smartcompanionapp.data.repository.AnnouncementRepository
 import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.screens.*
@@ -95,9 +95,16 @@ fun AppNavigation(
         // ── TASK-RELATED SCREENS (Isolated by UserId) ────────────────────────
         
         composable(Screen.Dashboard.route) {
+            val currentUserId = sessionManager.getUsername() ?: "guest"
+            val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val taskViewModel: TaskViewModel = viewModel(
+                key = currentUserId,
+                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+            )
             DashboardScreen(
                 navController = navController,
                 viewModel = dashboardViewModel,
+                taskViewModel = taskViewModel,
                 onViewAllClick = {
                     navController.navigate(Screen.AllAnnouncements.route)
                 }

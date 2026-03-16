@@ -29,9 +29,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.smartcompanionapp.data.model.Announcement
 import com.example.smartcompanionapp.data.session.SessionManager
+import com.example.smartcompanionapp.domain.TaskUiState
 import com.example.smartcompanionapp.intent.DashboardIntent
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
+import com.example.smartcompanionapp.viewmodel.TaskViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,9 +41,12 @@ import java.util.*
 fun DashboardScreen(
     navController: NavController,
     viewModel: DashboardViewModel,
+    taskViewModel: TaskViewModel, // Added TaskViewModel
     onViewAllClick: () -> Unit // New parameter for navigation
 ) {
     val state by viewModel.state.collectAsState()
+    val taskState by taskViewModel.uiState.collectAsState() // Observe TaskViewModel state
+    
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val username = sessionManager.getUsername() ?: "User"
@@ -102,9 +107,27 @@ fun DashboardScreen(
                     Column {
                         Text("Upcoming Deadlines", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         Spacer(modifier = Modifier.height(16.dp))
-                        DeadlineItem("Physics Lab Report", "Today, 11:59 PM", UniAccent)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        DeadlineItem("History Essay", "Tomorrow, 10:00 AM", UniPrimary)
+                        
+                        // ── DYNAMIC DEADLINES FROM VIEWMODEL ─────────────────────────
+                        when (val tasks = taskState) {
+                            is TaskUiState.Success -> {
+                                if (tasks.tasks.isEmpty()) {
+                                    Text("No upcoming deadlines", color = TextSecondary, fontSize = 14.sp)
+                                } else {
+                                    // Show first 3 tasks as dynamic deadlines
+                                    tasks.tasks.take(3).forEach { task ->
+                                        DeadlineItem(task.title, task.dueDate, UniPrimary)
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                }
+                            }
+                            is TaskUiState.Loading -> {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
+                            else -> {
+                                Text("Unable to load deadlines", color = Color.Red, fontSize = 12.sp)
+                            }
+                        }
                     }
                 }
             }
@@ -132,8 +155,6 @@ fun SectionTitle(title: String, action: String, onActionClick: () -> Unit) { // 
         )
     }
 }
-
-// ... (The rest of your file remains the same)
 
 @Composable
 fun AnnouncementBanner(announcement: Announcement, onDismiss: () -> Unit) {
@@ -188,7 +209,8 @@ fun StudentHeader(username: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column {
-            Text("Jan 15, Wednesday", fontSize = 13.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
+            val dateFormat = SimpleDateFormat("MMM dd, EEEE", Locale.getDefault())
+            Text(dateFormat.format(Date()), fontSize = 13.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(4.dp))
             Text("Hi, $username", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
             Text("Computer Science • Year 3", fontSize = 14.sp, color = TextSecondary)
