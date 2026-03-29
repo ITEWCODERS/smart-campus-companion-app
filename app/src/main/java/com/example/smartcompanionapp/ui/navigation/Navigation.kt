@@ -1,5 +1,7 @@
 package com.example.smartcompanionapp.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Checklist
@@ -11,14 +13,27 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.smartcompanionapp.data.database.announcement.AppDatabase
+import com.example.smartcompanionapp.data.database.tasks.TaskDatabase
+import com.example.smartcompanionapp.data.repository.AnnouncementRepository
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.screens.*
 import com.example.smartcompanionapp.ui.theme.AppSurface
+import com.example.smartcompanionapp.viewmodel.DashboardViewModel
+import com.example.smartcompanionapp.viewmodel.TaskViewModel
+import com.example.smartcompanionapp.viewmodel.TaskViewModelFactory
+
 
 sealed class Screen(val route: String) {
     object GetStarted : Screen("get_started")
@@ -29,15 +44,37 @@ sealed class Screen(val route: String) {
     object CampusInformation : Screen("campusInfo")
     object Task : Screen("task")
     object Options : Screen("settings")
+    object AllAnnouncements : Screen("all_announcements")
 
     object Notifications : Screen("notifications")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     startDestination: String = Screen.GetStarted.route
 ) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    
+    // ── VIEW MODEL INITIALIZATIONS ───────────────────────────────────────────
+    
+    // 1. Dashboard ViewModel
+    val database = AppDatabase.getDatabase(context)
+    val repository = remember { AnnouncementRepository(database.announcementDao()) }
+    val dashboardViewModel: DashboardViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return DashboardViewModel(repository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -54,17 +91,48 @@ fun AppNavigation(
         composable(Screen.Signup.route) {
             SignUpScreen(navController)
         }
+        
+        // ── TASK-RELATED SCREENS (Isolated by UserId) ────────────────────────
+        
         composable(Screen.Dashboard.route) {
-            DashboardScreen(navController)
+            val currentUserId = sessionManager.getUsername() ?: "guest"
+            val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val taskViewModel: TaskViewModel = viewModel(
+                key = currentUserId,
+                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+            )
+            DashboardScreen(
+                navController = navController,
+                viewModel = dashboardViewModel,
+                taskViewModel = taskViewModel,
+                onViewAllClick = {
+                    navController.navigate(Screen.AllAnnouncements.route)
+                }
+            )
+        }
+        composable(Screen.AllAnnouncements.route) {
+            AllAnnouncementsScreen(navController, dashboardViewModel)
         }
         composable(Screen.Schedule.route) {
-            ScheduleScreen(navController)
+            val currentUserId = sessionManager.getUsername() ?: "guest"
+            val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val taskViewModel: TaskViewModel = viewModel(
+                key = currentUserId, // Creates a NEW ViewModel instance per user
+                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+            )
+            ScheduleScreen(navController = navController, viewModel = taskViewModel)
         }
         composable(Screen.CampusInformation.route) {
             CampusInfoScreen(navController)
         }
         composable(Screen.Task.route) {
-            TaskScreen(navController)
+            val currentUserId = sessionManager.getUsername() ?: "guest"
+            val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val taskViewModel: TaskViewModel = viewModel(
+                key = currentUserId,
+                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+            )
+            TaskScreen(navController, taskViewModel)
         }
         composable(Screen.Options.route) {
             SettingsScreen(navController)
