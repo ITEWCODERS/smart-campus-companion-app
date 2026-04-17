@@ -4,7 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
-// ✅ ONE unified Room entity used by BOTH TaskScreen and ScheduleScreen.
+// ONE unified Room entity used by BOTH TaskScreen and ScheduleScreen.
 // - TaskScreen uses all fields
 // - ScheduleScreen filters by `date`, displays title/subject/dueDate
 // The old separate "Tasks" class in com.example.smartcompanionapp.model can be DELETED.

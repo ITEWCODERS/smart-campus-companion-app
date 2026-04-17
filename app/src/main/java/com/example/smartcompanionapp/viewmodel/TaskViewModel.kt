@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// ✅ Now accepts TaskDao so tasks are saved to Room (persists across app restarts)
 class TaskViewModel(private val dao: TaskDao, private val userId: String) : ViewModel() {
 
     // ─────────────────────────────────────────────
