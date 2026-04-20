@@ -59,12 +59,13 @@ fun AppNavigation(
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val firestore = remember { FirebaseFirestore.getInstance() }
     
     // ── VIEW MODEL INITIALIZATIONS ───────────────────────────────────────────
     
     // 1. Dashboard ViewModel
     val database = AppDatabase.getDatabase(context)
-    val repository = remember { AnnouncementRepository(database.announcementDao()) }
+    val repository = remember { AnnouncementRepository(database.announcementDao(), firestore) }
     val dashboardViewModel: DashboardViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -99,7 +100,6 @@ fun AppNavigation(
         composable(Screen.Dashboard.route) {
             val currentUserId = sessionManager.getUsername() ?: "guest"
             val taskDatabase = remember { TaskDatabase.getDatabase(context) }
-            val firestore = remember { FirebaseFirestore.getInstance() }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
                 key = currentUserId,
@@ -120,7 +120,6 @@ fun AppNavigation(
         composable(Screen.Schedule.route) {
             val currentUserId = sessionManager.getUsername() ?: "guest"
             val taskDatabase = remember { TaskDatabase.getDatabase(context) }
-            val firestore = remember { FirebaseFirestore.getInstance() }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
                 key = currentUserId, // Creates a NEW ViewModel instance per user
@@ -134,7 +133,6 @@ fun AppNavigation(
         composable(Screen.Task.route) {
             val currentUserId = sessionManager.getUsername() ?: "guest"
             val taskDatabase = remember { TaskDatabase.getDatabase(context) }
-            val firestore = remember { FirebaseFirestore.getInstance() }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
                 key = currentUserId,
