@@ -27,12 +27,14 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.smartcompanionapp.data.database.announcement.AppDatabase
 import com.example.smartcompanionapp.data.database.tasks.TaskDatabase
 import com.example.smartcompanionapp.data.repository.AnnouncementRepository
+import com.example.smartcompanionapp.data.repository.TaskRepository
 import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.screens.*
 import com.example.smartcompanionapp.ui.theme.AppSurface
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 import com.example.smartcompanionapp.viewmodel.TaskViewModel
 import com.example.smartcompanionapp.viewmodel.TaskViewModelFactory
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 sealed class Screen(val route: String) {
@@ -97,9 +99,11 @@ fun AppNavigation(
         composable(Screen.Dashboard.route) {
             val currentUserId = sessionManager.getUsername() ?: "guest"
             val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val firestore = remember { FirebaseFirestore.getInstance() }
+            val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
                 key = currentUserId,
-                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+                factory = TaskViewModelFactory(taskRepository, currentUserId)
             )
             DashboardScreen(
                 navController = navController,
@@ -116,9 +120,11 @@ fun AppNavigation(
         composable(Screen.Schedule.route) {
             val currentUserId = sessionManager.getUsername() ?: "guest"
             val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val firestore = remember { FirebaseFirestore.getInstance() }
+            val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
                 key = currentUserId, // Creates a NEW ViewModel instance per user
-                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+                factory = TaskViewModelFactory(taskRepository, currentUserId)
             )
             ScheduleScreen(navController = navController, viewModel = taskViewModel)
         }
@@ -128,9 +134,11 @@ fun AppNavigation(
         composable(Screen.Task.route) {
             val currentUserId = sessionManager.getUsername() ?: "guest"
             val taskDatabase = remember { TaskDatabase.getDatabase(context) }
+            val firestore = remember { FirebaseFirestore.getInstance() }
+            val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
                 key = currentUserId,
-                factory = TaskViewModelFactory(taskDatabase.taskDao(), currentUserId)
+                factory = TaskViewModelFactory(taskRepository, currentUserId)
             )
             TaskScreen(navController, taskViewModel)
         }
