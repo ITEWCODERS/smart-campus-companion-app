@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.smartcompanionapp.data.repository.AuthRepository
 import com.example.smartcompanionapp.data.database.authentication.AuthDatabase
 import com.example.smartcompanionapp.data.database.authentication.UserEntity
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,7 +20,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val authDao = AuthDatabase.getDatabase(application).authDao()
-        repository = AuthRepository(authDao)
+        val firestore = FirebaseFirestore.getInstance()
+        repository = AuthRepository(authDao, firestore)
     }
 
     fun signUp(username: String, email: String, password: String, role: String) {
