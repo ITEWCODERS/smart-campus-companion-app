@@ -2,13 +2,13 @@ package com.example.smartcompanionapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.smartcompanionapp.data.TaskDao
+import com.example.smartcompanionapp.data.repository.TaskRepository
 
-class TaskViewModelFactory(private val dao: TaskDao, private val userId: String) : ViewModelProvider.Factory {
+class TaskViewModelFactory(private val repository: TaskRepository, private val userId: String) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TaskViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return TaskViewModel(dao, userId) as T
+            return TaskViewModel(repository, userId) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
