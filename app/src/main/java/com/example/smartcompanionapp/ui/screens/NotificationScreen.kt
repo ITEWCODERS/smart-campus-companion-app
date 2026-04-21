@@ -11,18 +11,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.ui.theme.*
+import com.example.smartcompanionapp.worker.AnnouncementWorkScheduler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController) {
-    var announcements by remember { mutableStateOf(true) }
-    var deadlines by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    var announcements  by remember { mutableStateOf(true) }
+    var deadlines      by remember { mutableStateOf(true) }
     var classReminders by remember { mutableStateOf(true) }
-    var events by remember { mutableStateOf(false) }
+    var events         by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (announcements) AnnouncementWorkScheduler.schedule(context)
+    }
 
     Scaffold(
         containerColor = AppBackground,
@@ -31,7 +38,10 @@ fun NotificationsScreen(navController: NavController) {
                 title = { Text("Notifications") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -49,25 +59,58 @@ fun NotificationsScreen(navController: NavController) {
         ) {
             item {
                 Text(
-                    text = "Notification preferences",
-                    style = MaterialTheme.typography.titleMedium,
+                    text     = "Notification Preferences",
+                    style    = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
-            item { NotificationToggle("Campus Announcements", announcements) { announcements = it } }
-            item { NotificationToggle("Deadlines & Assignments", deadlines) { deadlines = it } }
-            item { NotificationToggle("Class Reminders", classReminders) { classReminders = it } }
-            item { NotificationToggle("Events & Activities", events) { events = it } }
+            item {
+                NotificationToggle(
+                    label    = "Campus Announcements",
+                    subtitle = "Background sync every 15 minutes",
+                    checked  = announcements,
+                    onChange = { enabled ->
+                        announcements = enabled
+                        if (enabled) AnnouncementWorkScheduler.schedule(context)
+                        else         AnnouncementWorkScheduler.cancel(context)
+                    }
+                )
+            }
+            item {
+                NotificationToggle(
+                    label    = "Deadlines & Assignments",
+                    subtitle = "Reminders before due dates",
+                    checked  = deadlines,
+                    onChange = { deadlines = it }
+                )
+            }
+            item {
+                NotificationToggle(
+                    label    = "Class Reminders",
+                    subtitle = "15 minutes before class starts",
+                    checked  = classReminders,
+                    onChange = { classReminders = it }
+                )
+            }
+            item {
+                NotificationToggle(
+                    label    = "Events & Activities",
+                    subtitle = "Campus events and club activities",
+                    checked  = events,
+                    onChange = { events = it }
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun NotificationToggle(
-    label: String,
-    checked: Boolean,
-    onChange: (Boolean) -> Unit
+    label    : String,
+    subtitle : String,
+    checked  : Boolean,
+    onChange : (Boolean) -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -76,23 +119,30 @@ private fun NotificationToggle(
         color = AppSurface
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier          = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 Icons.Rounded.Notifications,
                 contentDescription = null,
-                tint = UniAccent,
+                tint     = UniAccent,
                 modifier = Modifier.size(26.dp)
             )
             Spacer(Modifier.width(16.dp))
-            Text(
-                text = label,
-                modifier = Modifier.weight(1f),
-                color = TextPrimary
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text  = label,
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text  = subtitle,
+                    color = TextSecondary.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
             Switch(
-                checked = checked,
+                checked         = checked,
                 onCheckedChange = onChange,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = UniPrimary,
@@ -101,10 +151,4 @@ private fun NotificationToggle(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NotificationScreenPreview() {
-    NotificationsScreen(navController = androidx.navigation.compose.rememberNavController())
 }
