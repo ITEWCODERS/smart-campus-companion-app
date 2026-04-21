@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Wake device when notification arrives -->
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <!-- Vibration -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Keep app running for FCM -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
 
     <application
         android:allowBackup="true"
@@ -11,6 +21,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SmartCompanionApp">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -18,10 +29,27 @@
             android:theme="@style/Theme.SmartCompanionApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- FCM Service -->
+<!--        <service-->
+<!--            android:name=".MyFirebaseMessagingService"-->
+<!--            android:exported="false">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.google.firebase.MESSAGING_EVENT" />-->
+<!--            </intent-filter>-->
+<!--        </service>-->
+
+        <!-- Default notification channel metadata for FCM -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="smart_companion_channel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_launcher_foreground" />
+
     </application>
 
 </manifest>

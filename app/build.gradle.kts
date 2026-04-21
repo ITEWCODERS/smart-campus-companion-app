@@ -8,9 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.smartcompanionapp"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.smartcompanionapp"
@@ -55,9 +53,24 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
+//    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+//    implementation("com.google.firebase:firebase-auth")
+//    implementation("com.google.firebase:firebase-firestore")
+
+    //messaging notif
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+
+// ✅ CHANGED: use firebase-messaging instead of firebase-messaging-ktx
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    //
+
+    // ── WORKMANAGER ──────────────────────────────────────────────────────────
+    // Core WorkManager with Kotlin coroutine support
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    //
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
