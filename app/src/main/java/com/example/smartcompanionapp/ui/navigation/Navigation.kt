@@ -89,7 +89,11 @@ fun AppNavigation(
             )
         }
         composable(Screen.Login.route) {
-            LoginScreen(navController)
+            // We pass the dashboardViewModel that was created on line 73
+            LoginScreen(
+                navController = navController,
+                dashboardViewModel = dashboardViewModel
+            )
         }
         composable(Screen.Signup.route) {
             SignUpScreen(navController)

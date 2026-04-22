@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,13 +54,16 @@ fun AllAnnouncementsScreen(
                 )
             )
         },
+        // ONLY SHOW FAB IF ADMIN
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showSheet = true },
-                containerColor = UniPrimary,
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add News")
+            if (state.isAdmin) {
+                FloatingActionButton(
+                    onClick = { showSheet = true },
+                    containerColor = UniPrimary,
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add News")
+                }
             }
         }
     ) { paddingValues ->
@@ -72,6 +77,7 @@ fun AllAnnouncementsScreen(
             items(state.campusNews) { news ->
                 FullWidthAnnouncementCard(
                     news = news,
+                    isAdmin = state.isAdmin, // Pass the role here
                     onDelete = {
                         viewModel.processIntent(DashboardIntent.DeleteAnnouncement(news))
                     }
@@ -79,7 +85,7 @@ fun AllAnnouncementsScreen(
             }
         }
 
-        if (showSheet) {
+        if (showSheet && state.isAdmin) {
             AddAnnouncementBottomSheet(
                 onDismiss = { showSheet = false },
                 onPost = { title, content ->
@@ -97,92 +103,10 @@ fun AllAnnouncementsScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddAnnouncementBottomSheet(
-    onDismiss: () -> Unit,
-    onPost: (String, String) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState()
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-        containerColor = AppSurface
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 48.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                "Post New Announcement",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    focusedLabelColor = UniPrimary,
-                    unfocusedLabelColor = TextSecondary
-                )
-            )
-
-            OutlinedTextField(
-                value = content,
-                onValueChange = { content = it },
-                label = { Text("Content") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    focusedLabelColor = UniPrimary,
-                    unfocusedLabelColor = TextSecondary
-                )
-            )
-
-            Button(
-                onClick = {
-                    if (title.isNotBlank() && content.isNotBlank()) {
-                        onPost(title, content)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = title.isNotBlank() && content.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = UniPrimary,
-                    contentColor = Color.White,
-                    disabledContainerColor = TextSecondary.copy(alpha = 0.3f),
-                    disabledContentColor = Color.White
-                )
-            ) {
-                Text("Post Announcement")
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
 @Composable
 fun FullWidthAnnouncementCard(
     news: Announcement,
+    isAdmin: Boolean, // New parameter
     onDelete: () -> Unit
 ) {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy, h:mm a", Locale.getDefault())
@@ -207,12 +131,16 @@ fun FullWidthAnnouncementCard(
                     color = UniPrimary,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Announcement",
-                        tint = Color.Red.copy(alpha = 0.7f)
-                    )
+
+                // ONLY SHOW DELETE BUTTON IF ADMIN
+                if (isAdmin) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Announcement",
+                            tint = Color.Red.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
             Text(
@@ -228,6 +156,62 @@ fun FullWidthAnnouncementCard(
                 style = MaterialTheme.typography.bodyLarge,
                 color = TextPrimary
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddAnnouncementBottomSheet(
+    onDismiss: () -> Unit,
+    onPost: (String, String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = AppSurface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Post New Announcement",
+                style = MaterialTheme.typography.headlineSmall,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Title") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = content,
+                onValueChange = { content = it },
+                label = { Text("Content") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
+            )
+
+            Button(
+                onClick = { if (title.isNotBlank() && content.isNotBlank()) onPost(title, content) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary),
+                enabled = title.isNotBlank() && content.isNotBlank()
+            ) {
+                Text("Post Announcement", color = Color.White)
+            }
         }
     }
 }

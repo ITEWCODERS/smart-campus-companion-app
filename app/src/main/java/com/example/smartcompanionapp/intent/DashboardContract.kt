@@ -6,7 +6,9 @@ import com.example.smartcompanionapp.data.model.Announcement
 data class DashboardState(
     val topAnnouncement: Announcement? = null,
     val campusNews: List<Announcement> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isAdmin: Boolean = false
+
 )
 
 // 2. INTENT: Represents actions the user can take
