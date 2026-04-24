@@ -25,32 +25,64 @@
             android:exported="true"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.SmartCompanionApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!--
+                Deep-link intent so tapping the notification opens the app
+                directly to AllAnnouncements. MainActivity reads the
+                "navigate_to" extra from the PendingIntent and routes accordingly.
+            -->
+            <intent-filter>
+                <action android:name="OPEN_ALL_ANNOUNCEMENTS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
-        <!-- FCM Service — receives push even when app is closed -->
+        <!--
+            FIX: exported must be TRUE.
+            FCM is a separate system process. On Android 12+ (API 31+), any
+            service with exported=false cannot be bound by an external process,
+            including the FCM system process. With exported=false, messages are
+            silently dropped on background/killed apps — exactly the symptom
+            you see on Infinix and the API 36 emulator.
+
+            The android:permission attribute limits who can actually send intents
+            to this service. Only the Firebase SDK (which holds
+            com.google.android.c2dm.permission.SEND) can trigger it, so
+            exported=true here does NOT expose the service to arbitrary apps.
+        -->
         <service
             android:name=".service.MyFirebaseMessagingService"
-            android:exported="false">
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <!-- MarkAsReadReceiver — was missing, this is why Mark as Read wasn't working -->
+        <!--
+            MarkAsReadReceiver — exported=false is correct here because it is
+            only triggered by your own app's PendingIntent (FLAG_IMMUTABLE),
+            not by any external process.
+        -->
         <receiver
             android:name=".service.MarkAsReadReceiver"
             android:exported="false"/>
 
-<!--        <meta-data-->
-<!--            android:name="com.google.firebase.messaging.default_notification_channel_id"-->
-<!--            android:value="campus_announcements" />-->
-        <!-- CHANGE: update to the new channel ID -->
+        <!--
+            Default notification channel used by the FCM system when it displays
+            a notification automatically (i.e. when a "notification" payload block
+            is present and the app is in the background).
+            Since we now send DATA-ONLY messages, this meta-data is a safety net
+            only — it will never be used by the current code path, but it prevents
+            FCM from falling back to a default unconfigured channel if something
+            unexpected triggers a system-handled notification.
+        -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="campus_announcements_v2" />

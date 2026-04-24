@@ -13,64 +13,58 @@ import com.example.smartcompanionapp.MainActivity
 import com.example.smartcompanionapp.R
 import com.example.smartcompanionapp.data.model.Announcement
 
-/**
- * Service to handle creation of notification channels and displaying notifications.
- */
 object AnnouncementNotificationService {
 
-    const val CHANNEL_ID   = "campus_announcements_v2"
+    const val CHANNEL_ID = "campus_announcements_v2"
     private const val CHANNEL_NAME = "Campus Announcements"
     private const val CHANNEL_DESC = "New announcements from your campus"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
             val audioAttributes = AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                 .build()
 
             val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = CHANNEL_DESC
                 setSound(soundUri, audioAttributes)
                 enableLights(true)
                 enableVibration(true)
+                lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
             }
 
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                    as NotificationManager
-            manager.createNotificationChannel(channel)
+            (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                .createNotificationChannel(channel)
         }
     }
 
+    // Used by DashboardViewModel — has a real Room ID
     fun showAnnouncementNotification(context: Context, announcement: Announcement) {
-        val openIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("navigate_to", "all_announcements")
-        }
-        val openPendingIntent = PendingIntent.getActivity(
+        val baseId = stableId(announcement.title)
+
+        val openPending = PendingIntent.getActivity(
             context,
-            announcement.id,
-            openIntent,
+            baseId,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("navigate_to", "all_announcements")
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val markReadIntent = Intent(context, MarkAsReadReceiver::class.java).apply {
-            putExtra("announcement_id", announcement.id)
-        }
-        val markReadPendingIntent = PendingIntent.getBroadcast(
+        val markReadPending = PendingIntent.getBroadcast(
             context,
-            announcement.id + 10000,
-            markReadIntent,
+            baseId + 50_000,
+            Intent(context, MarkAsReadReceiver::class.java).apply {
+                putExtra("announcement_id", announcement.id)
+                putExtra("announcement_title", announcement.title)
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
-        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
@@ -83,30 +77,71 @@ object AnnouncementNotificationService {
                     .setSummaryText("Campus Announcement")
             )
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(openPendingIntent)
+            .setContentIntent(openPending)
             .setAutoCancel(true)
-            .setSound(soundUri)
-            .addAction(R.drawable.ic_notification, "Mark as Read", markReadPendingIntent)
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(R.drawable.ic_notification, "Mark as Read", markReadPending)
             .build()
 
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                as NotificationManager
-        manager.notify(announcement.id, notification)
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(baseId, notification)
     }
 
-    /**
-     * Shows a summary notification when multiple announcements are found at once.
-     * Prevents the system from "shedding" (blocking) the app for being too noisy.
-     */
-    fun showSummaryNotification(context: Context, count: Int) {
-        val openIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("navigate_to", "all_announcements")
-        }
-        val openPendingIntent = PendingIntent.getActivity(
+    // Used by MyFirebaseMessagingService — title only, no Room ID yet
+    fun showAnnouncementNotificationFromFcm(context: Context, title: String, body: String) {
+        val baseId = stableId(title)
+
+        val openPending = PendingIntent.getActivity(
             context,
-            9999, // static ID for summary
-            openIntent,
+            baseId,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("navigate_to", "all_announcements")
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val markReadPending = PendingIntent.getBroadcast(
+            context,
+            baseId + 50_000,
+            Intent(context, MarkAsReadReceiver::class.java).apply {
+                // No Room ID available — receiver will look up by title
+                putExtra("announcement_title", title)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("📢 $title")
+            .setContentText(body)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(body)
+                    .setBigContentTitle("📢 $title")
+                    .setSummaryText("Campus Announcement")
+            )
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(openPending)
+            .setAutoCancel(true)
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(R.drawable.ic_notification, "Mark as Read", markReadPending)
+            .build()
+
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(baseId, notification)
+    }
+
+    fun showSummaryNotification(context: Context, count: Int) {
+        val openPending = PendingIntent.getActivity(
+            context,
+            Int.MAX_VALUE - 1,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("navigate_to", "all_announcements")
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -115,13 +150,19 @@ object AnnouncementNotificationService {
             .setContentTitle("New Campus Announcements")
             .setContentText("You have $count new announcements.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(openPendingIntent)
+            .setContentIntent(openPending)
             .setAutoCancel(true)
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setNumber(count)
             .build()
 
-        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                as NotificationManager
-        manager.notify(9999, notification)
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .notify(Int.MAX_VALUE - 1, notification)
+    }
+
+    fun stableId(title: String): Int {
+        val h = title.hashCode()
+        return Math.abs(if (h == Int.MIN_VALUE) 0 else h)
     }
 }

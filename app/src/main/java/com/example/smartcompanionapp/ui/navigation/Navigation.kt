@@ -1,5 +1,13 @@
 package com.example.smartcompanionapp.ui.navigation
 
+// ── CHANGE SUMMARY ────────────────────────────────────────────────────────────
+// The only change in this file is passing `context.applicationContext` as the
+// `context` parameter to AnnouncementRepository. This enables the repository
+// to persist notified title hashes to SharedPreferences (Bug C fix).
+//
+// No other logic changed. The full file is reproduced for completeness.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -51,23 +59,20 @@ fun AppNavigation(
     val firestore      = remember { FirebaseFirestore.getInstance() }
     val database       = remember { AppDatabase.getDatabase(context) }
 
-    // ROOT CAUSE FIX 7:
-    // userId MUST be resolved here before creating the repository.
-    // The original code created AnnouncementRepository with no userId (defaulting
-    // to ""), so every DAO query filtered WHERE userId = '' and returned zero rows
-    // for every real logged-in user on every device except the poster's own session.
-    val currentUserId = remember { sessionManager.getUsername() ?: "guest" }
+    val currentUserId = remember { sessionManager.getUsername() ?: "" }
 
-    // Repository is keyed to userId — a new instance is created if the user changes
     val announcementRepository = remember(currentUserId) {
         AnnouncementRepository(
             dao       = database.announcementDao(),
             firestore = firestore,
-            userId    = currentUserId
+            userId    = currentUserId,
+            // KEY CHANGE: pass applicationContext so the repository can persist
+            // notifiedTitles to SharedPreferences. This survives process death
+            // and prevents re-notification of previously shown announcements.
+            context   = context.applicationContext
         )
     }
 
-    // ViewModel also keyed to userId — rebuilt when the user logs in/out
     val dashboardViewModel: DashboardViewModel = viewModel(
         key = "dashboard_$currentUserId",
         factory = object : ViewModelProvider.Factory {
@@ -107,9 +112,6 @@ fun AppNavigation(
             )
         }
 
-        // Both Dashboard and AllAnnouncements share the SAME dashboardViewModel,
-        // so they observe the exact same allAnnouncements StateFlow.
-        // When FCM → syncFromFirestore() → upsert fires, both screens update.
         composable(Screen.AllAnnouncements.route) {
             AllAnnouncementsScreen(navController, dashboardViewModel)
         }

@@ -48,7 +48,16 @@ class MainActivity : ComponentActivity() {
                 val token = task.result
                 android.util.Log.d("FCM", "Your Device Token: $token")
             } else {
-                android.util.Log.e("FCM", "Failed to get token", task.exception)
+                val e = task.exception
+                if (e?.message?.contains("FIS_AUTH_ERROR") == true) {
+                    android.util.Log.e("FCM", "CRITICAL ERROR: Firebase Installation Error (FIS_AUTH_ERROR). " +
+                            "FCM will NOT work on this device. Possible causes: " +
+                            "1. Device clock is wrong. " +
+                            "2. No Google Account on phone. " +
+                            "3. API Key is restricted in Google Cloud Console.")
+                } else {
+                    android.util.Log.e("FCM", "Failed to get token", e)
+                }
             }
         }
 

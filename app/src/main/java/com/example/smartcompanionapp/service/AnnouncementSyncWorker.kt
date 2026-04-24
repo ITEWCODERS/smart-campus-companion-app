@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.smartcompanionapp.data.database.announcement.AppDatabase
 import com.example.smartcompanionapp.data.model.Announcement
+import com.example.smartcompanionapp.data.repository.AnnouncementRepository
 import com.example.smartcompanionapp.data.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -20,17 +21,30 @@ class AnnouncementSyncWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val sessionManager = SessionManager(context)
-            val userId = sessionManager.getUsername() ?: return Result.success()
+            // FALLBACK CHANGE: use "" consistently
+            val userId = SessionManager(context).getUsername() ?: ""
 
             val db        = AppDatabase.getDatabase(context)
             val dao       = db.announcementDao()
             val firestore = FirebaseFirestore.getInstance()
 
-            // Ensure notification channel exists before any notify() call
+            val repo = AnnouncementRepository(
+                dao       = dao,
+                firestore = firestore,
+                userId    = userId,
+                context   = context.applicationContext
+            )
+
             AnnouncementNotificationService.createNotificationChannel(context)
 
-            // ── STEP 1: Fetch remote list from Firestore ──────────────────────
+            // Get existing titles BEFORE sync for diffing
+            val existingTitles = dao.getAllTitles(userId).toHashSet()
+
+            // Perform sync
+            repo.syncFromFirestore()
+
+            // Fetch remote announcements again for notification diff
+            // (Mirroring repo internal logic but ensuring we have Room IDs)
             val snapshot = firestore
                 .collection("announcements")
                 .orderBy("datePosted", Query.Direction.DESCENDING)
@@ -50,21 +64,15 @@ class AnnouncementSyncWorker(
                 )
             }
 
-            // ── STEP 2: Diff BEFORE sync to find truly new items ──────────────
-            val existingTitles = dao.getAllTitles(userId).toHashSet()
-            val trulyNew = remoteAnnouncements.filter { it.title !in existingTitles }
+            // Truly new = not in Room AND not already notified
+            val trulyNew = remoteAnnouncements.filter {
+                it.title !in existingTitles && !repo.isAlreadyNotified(it.title)
+            }
 
-            Log.d(TAG, "Syncing: Found ${trulyNew.size} new announcements.")
+            Log.d(TAG, "Worker: found ${trulyNew.size} new items")
 
-            // ── STEP 3: Atomic sync (delete stale + insert all remote) ─────────
-            dao.syncAnnouncements(remoteAnnouncements, userId)
-
-            // ── STEP 4: Notify gracefully ─────────────────────────────────────
-            // We notify even if it's the first sync, but only if it's a few items
-            // so we don't spam the user with history.
             if (trulyNew.isNotEmpty()) {
                 if (trulyNew.size <= 3) {
-                    // Small number? Show them individually.
                     trulyNew.forEach { newItem ->
                         val stored = dao.getByTitle(newItem.title, userId)
                         if (stored != null) {
@@ -72,7 +80,6 @@ class AnnouncementSyncWorker(
                         }
                     }
                 } else {
-                    // Multiple? Show a summary to avoid "Shedding" (system blocking noisy apps)
                     AnnouncementNotificationService.showSummaryNotification(context, trulyNew.size)
                 }
             }
