@@ -6,121 +6,64 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.example.smartcompanionapp.data.model.Announcement
 import kotlinx.coroutines.flow.Flow
 
-//@Dao
-//interface AnnouncementDao {
-//    @Query("SELECT * FROM announcements ORDER BY datePosted DESC")
-//    fun getAllNews(): Flow<List<Announcement>>
-//
-//    @Query("SELECT * FROM announcements ORDER BY datePosted DESC LIMIT 1")
-//    fun getTopUnreadAnnouncement(): Flow<Announcement?>
-//
-//    @Query("UPDATE announcements SET isRead = 1 WHERE id = :id")
-//    suspend fun markAsRead(id: Int)
-//
-//    @Insert(onConflict = OnConflictStrategy.IGNORE)
-//    suspend fun insertAnnouncements(announcements: List<Announcement>)
-//
-//    @Delete
-//    suspend fun deleteAnnouncement(announcement: Announcement)
-//
-//    @Query("SELECT COUNT(*) FROM announcements")
-//    suspend fun getCount(): Int
-//
-//    @Query("DELETE FROM announcements WHERE title NOT IN (:titles)")
-//    suspend fun deleteOldAnnouncements(titles: List<String>)
-//
-//    @Transaction
-//    suspend fun syncAnnouncements(announcements: List<Announcement>) {
-//        val currentTitles = announcements.map { it.title }
-//        deleteOldAnnouncements(currentTitles)
-//        insertAnnouncements(announcements)
-//    }
-//}
-
-/**
- * STEP 2 — ROOM DAO
- *
- * CHANGES from original:
- * + Added getAllTitles()  → WorkManager uses this to diff remote vs local,
- *                          so it only fires notifications for truly NEW announcements.
- * + Added getByTitle()   → After insert, Room assigns the auto-generated ID.
- *                          WorkManager needs the real ID to tag the notification correctly.
- *
- * Everything else is unchanged from your original DAO.
- */
 @Dao
 interface AnnouncementDao {
 
-    // ── READ ──────────────────────────────────────────────────────────────────
+    // Returns announcements for a specific user, newest first
+    @Query("SELECT * FROM announcements WHERE userId = :userId ORDER BY datePosted DESC")
+    fun getAllNews(userId: String): Flow<List<Announcement>>
 
-    /** Live stream of ALL announcements, newest first. Collected by the UI. */
-    @Query("SELECT * FROM announcements ORDER BY datePosted DESC")
-    fun getAllNews(): Flow<List<Announcement>>
+    // Top unread for a specific user
+    @Query("SELECT * FROM announcements WHERE isRead = 0 AND userId = :userId ORDER BY datePosted DESC LIMIT 1")
+    fun getTopUnreadAnnouncement(userId: String): Flow<Announcement?>
 
-    /**
-     * Live stream of the single latest UNREAD announcement.
-     * Used by the Dashboard preview card to show the most urgent item.
-     *
-     * NOTE: The original query fetched the top row regardless of isRead;
-     * this version filters for unread only so the card disappears once everything is read.
-     */
-    @Query("SELECT * FROM announcements WHERE isRead = 0 ORDER BY datePosted DESC LIMIT 1")
-    fun getTopUnreadAnnouncement(): Flow<Announcement?>
+    // Mark as read for a specific user
+    @Query("UPDATE announcements SET isRead = 1 WHERE id = :id AND userId = :userId")
+    suspend fun markAsRead(id: Int, userId: String)
 
-    // ── WRITE ─────────────────────────────────────────────────────────────────
+    // ROOT CAUSE FIX 1:
+    // The old @Insert(OnConflictStrategy.IGNORE) silently skipped rows that already
+    // existed (same title+userId index), so Room never updated and the Flow never
+    // emitted — meaning Device 2's UI never refreshed after FCM sync.
+    // @Upsert = INSERT OR REPLACE: always writes the row, always triggers the Flow.
+    @Upsert
+    suspend fun upsertAnnouncements(announcements: List<Announcement>)
 
-    /** Mark a single announcement as read. Called from UI and from the notification action. */
-    @Query("UPDATE announcements SET isRead = 1 WHERE id = :id")
-    suspend fun markAsRead(id: Int)
-
-    /**
-     * Bulk insert. OnConflictStrategy.IGNORE means if a title already exists
-     * (unique index), the row is silently skipped — no crash, no duplicate.
-     */
+    // Keep the plain insert for any call sites that truly want IGNORE semantics
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAnnouncements(announcements: List<Announcement>)
 
     @Delete
     suspend fun deleteAnnouncement(announcement: Announcement)
 
-    // ── HELPERS for WorkManager diffing ──────────────────────────────────────
+    @Query("SELECT title FROM announcements WHERE userId = :userId")
+    suspend fun getAllTitles(userId: String): List<String>
 
-    /**
-     * NEW — Returns every title currently stored in Room.
-     * WorkManager compares this list against the Firestore response to find
-     * announcements that don't exist locally yet → those get a notification.
-     */
-    @Query("SELECT title FROM announcements")
-    suspend fun getAllTitles(): List<String>
+    @Query("SELECT * FROM announcements WHERE title = :title AND userId = :userId LIMIT 1")
+    suspend fun getByTitle(title: String, userId: String): Announcement?
 
-    /**
-     * NEW — Fetches a single stored announcement by its title.
-     * Used right after insertAnnouncements() to retrieve the auto-generated Room ID,
-     * which becomes the notification ID so we can cancel it on "Mark as Read".
-     */
-    @Query("SELECT * FROM announcements WHERE title = :title LIMIT 1")
-    suspend fun getByTitle(title: String): Announcement?
+    @Query("DELETE FROM announcements WHERE title NOT IN (:titles) AND userId = :userId")
+    suspend fun deleteOldAnnouncements(titles: List<String>, userId: String)
 
-    // ── SYNC TRANSACTION ─────────────────────────────────────────────────────
+    @Query("SELECT COUNT(*) FROM announcements WHERE userId = :userId")
+    suspend fun getCount(userId: String): Int
 
-    /** Prune stale rows not present in the latest Firestore snapshot. */
-    @Query("DELETE FROM announcements WHERE title NOT IN (:titles)")
-    suspend fun deleteOldAnnouncements(titles: List<String>)
-
-    @Query("SELECT COUNT(*) FROM announcements")
-    suspend fun getCount(): Int
-
-    /**
-     * Atomic sync: delete stale rows THEN insert new ones in a single transaction.
-     * If anything fails, both operations roll back together.
-     */
+    // ROOT CAUSE FIX 2:
+    // Old syncAnnouncements used insertAnnouncements (IGNORE) after deleting stale
+    // rows. If a row was deleted then re-inserted with the same title+userId it would
+    // work, but if the delete didn't fire (titles list unchanged) the IGNORE skipped
+    // the upsert entirely and the Flow got no emission.
+    // Now we always upsert — this guarantees Room writes the row and the Flow emits.
     @Transaction
-    suspend fun syncAnnouncements(announcements: List<Announcement>) {
+    suspend fun syncAnnouncements(announcements: List<Announcement>, userId: String) {
         val currentTitles = announcements.map { it.title }
-        deleteOldAnnouncements(currentTitles)
-        insertAnnouncements(announcements)
+        // Remove announcements from Room that no longer exist in Firestore
+        deleteOldAnnouncements(currentTitles, userId)
+        // Upsert all remote announcements — always triggers Flow emission
+        upsertAnnouncements(announcements)
     }
 }

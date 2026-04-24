@@ -1,28 +1,31 @@
-package com.example.smartcompanionapp.worker
+package com.example.smartcompanionapp.service
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.smartcompanionapp.data.database.announcement.AppDatabase
 import com.example.smartcompanionapp.data.model.Announcement
-import com.example.smartcompanionapp.data.repository.AnnouncementRepository
-import com.example.smartcompanionapp.service.AnnouncementNotificationService
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
-
 
 class AnnouncementSyncWorker(
     private val context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
 
+    private val TAG = "AnnouncementSyncWorker"
+
     override suspend fun doWork(): Result {
         return try {
+            val sessionManager = SessionManager(context)
+            val userId = sessionManager.getUsername() ?: return Result.success()
+
             val db        = AppDatabase.getDatabase(context)
             val dao       = db.announcementDao()
             val firestore = FirebaseFirestore.getInstance()
-            val repo      = AnnouncementRepository(dao, firestore)
 
             // Ensure notification channel exists before any notify() call
             AnnouncementNotificationService.createNotificationChannel(context)
@@ -32,7 +35,7 @@ class AnnouncementSyncWorker(
                 .collection("announcements")
                 .orderBy("datePosted", Query.Direction.DESCENDING)
                 .get()
-                .await() // top-level kotlinx.coroutines.tasks.await — no extension needed
+                .await()
 
             val remoteAnnouncements = snapshot.documents.mapNotNull { doc ->
                 val title   = doc.getString("title")    ?: return@mapNotNull null
@@ -42,33 +45,42 @@ class AnnouncementSyncWorker(
                     title      = title,
                     content    = content,
                     datePosted = date,
-                    isRead     = false
+                    isRead     = false,
+                    userId     = userId
                 )
             }
 
-            // ── STEP 2: Diff BEFORE sync ──────────────────────────────────────
-            // findNewTitles() compares remote list against current Room contents.
-            // MUST happen before syncAnnouncements() wipes and rewrites Room.
-            val newAnnouncements = repo.findNewTitles(remoteAnnouncements)
+            // ── STEP 2: Diff BEFORE sync to find truly new items ──────────────
+            val existingTitles = dao.getAllTitles(userId).toHashSet()
+            val trulyNew = remoteAnnouncements.filter { it.title !in existingTitles }
+
+            Log.d(TAG, "Syncing: Found ${trulyNew.size} new announcements.")
 
             // ── STEP 3: Atomic sync (delete stale + insert all remote) ─────────
-            dao.syncAnnouncements(remoteAnnouncements)
+            dao.syncAnnouncements(remoteAnnouncements, userId)
 
-            // ── STEP 4: Notify for each truly new announcement ────────────────
-            newAnnouncements.forEach { newItem ->
-                val stored = dao.getByTitle(newItem.title)
-                if (stored != null) {
-                    AnnouncementNotificationService.showAnnouncementNotification(
-                        context,
-                        stored
-                    )
+            // ── STEP 4: Notify gracefully ─────────────────────────────────────
+            // We notify even if it's the first sync, but only if it's a few items
+            // so we don't spam the user with history.
+            if (trulyNew.isNotEmpty()) {
+                if (trulyNew.size <= 3) {
+                    // Small number? Show them individually.
+                    trulyNew.forEach { newItem ->
+                        val stored = dao.getByTitle(newItem.title, userId)
+                        if (stored != null) {
+                            AnnouncementNotificationService.showAnnouncementNotification(context, stored)
+                        }
+                    }
+                } else {
+                    // Multiple? Show a summary to avoid "Shedding" (system blocking noisy apps)
+                    AnnouncementNotificationService.showSummaryNotification(context, trulyNew.size)
                 }
             }
 
             Result.success()
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(TAG, "Sync failed", e)
             Result.retry()
         }
     }

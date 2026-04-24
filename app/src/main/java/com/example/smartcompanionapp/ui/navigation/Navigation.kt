@@ -26,7 +26,6 @@ import com.example.smartcompanionapp.viewmodel.TaskViewModel
 import com.example.smartcompanionapp.viewmodel.TaskViewModelFactory
 import com.google.firebase.firestore.FirebaseFirestore
 
-// ── ROUTES (unchanged) ────────────────────────────────────────────────────────
 sealed class Screen(val route: String) {
     object GetStarted       : Screen("get_started")
     object Login            : Screen("login")
@@ -47,22 +46,35 @@ fun AppNavigation(
     startDestination: String = Screen.GetStarted.route
 ) {
     val context        = LocalContext.current
-    // CHANGE: we need Application (not just Context) for AndroidViewModel factory
     val application    = context.applicationContext as Application
     val sessionManager = remember { SessionManager(context) }
     val firestore      = remember { FirebaseFirestore.getInstance() }
+    val database       = remember { AppDatabase.getDatabase(context) }
 
-    // ── DASHBOARD VIEW MODEL ──────────────────────────────────────────────────
-    val database   = AppDatabase.getDatabase(context)
-    val repository = remember { AnnouncementRepository(database.announcementDao(), firestore) }
+    // ROOT CAUSE FIX 7:
+    // userId MUST be resolved here before creating the repository.
+    // The original code created AnnouncementRepository with no userId (defaulting
+    // to ""), so every DAO query filtered WHERE userId = '' and returned zero rows
+    // for every real logged-in user on every device except the poster's own session.
+    val currentUserId = remember { sessionManager.getUsername() ?: "guest" }
 
+    // Repository is keyed to userId — a new instance is created if the user changes
+    val announcementRepository = remember(currentUserId) {
+        AnnouncementRepository(
+            dao       = database.announcementDao(),
+            firestore = firestore,
+            userId    = currentUserId
+        )
+    }
+
+    // ViewModel also keyed to userId — rebuilt when the user logs in/out
     val dashboardViewModel: DashboardViewModel = viewModel(
+        key = "dashboard_$currentUserId",
         factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
                     @Suppress("UNCHECKED_CAST")
-                    // CHANGE: pass `application` as first arg — DashboardViewModel is now AndroidViewModel
-                    return DashboardViewModel(application, repository) as T
+                    return DashboardViewModel(application, announcementRepository) as T
                 }
                 throw IllegalArgumentException("Unknown ViewModel: ${modelClass.name}")
             }
@@ -80,13 +92,11 @@ fun AppNavigation(
         composable(Screen.Login.route)  { LoginScreen(navController) }
         composable(Screen.Signup.route) { SignUpScreen(navController) }
 
-        // ── DASHBOARD ─────────────────────────────────────────────────────────
         composable(Screen.Dashboard.route) {
-            val currentUserId  = sessionManager.getUsername() ?: "guest"
             val taskDatabase   = remember { TaskDatabase.getDatabase(context) }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
-                key     = currentUserId,
+                key     = "task_$currentUserId",
                 factory = TaskViewModelFactory(taskRepository, currentUserId)
             )
             DashboardScreen(
@@ -97,17 +107,18 @@ fun AppNavigation(
             )
         }
 
-        // AllAnnouncementsScreen — receives dashboardViewModel for full list + markAsRead
+        // Both Dashboard and AllAnnouncements share the SAME dashboardViewModel,
+        // so they observe the exact same allAnnouncements StateFlow.
+        // When FCM → syncFromFirestore() → upsert fires, both screens update.
         composable(Screen.AllAnnouncements.route) {
             AllAnnouncementsScreen(navController, dashboardViewModel)
         }
 
         composable(Screen.Schedule.route) {
-            val currentUserId  = sessionManager.getUsername() ?: "guest"
             val taskDatabase   = remember { TaskDatabase.getDatabase(context) }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
-                key     = currentUserId,
+                key     = "task_$currentUserId",
                 factory = TaskViewModelFactory(taskRepository, currentUserId)
             )
             ScheduleScreen(navController = navController, viewModel = taskViewModel)
@@ -116,11 +127,10 @@ fun AppNavigation(
         composable(Screen.CampusInformation.route) { CampusInfoScreen(navController) }
 
         composable(Screen.Task.route) {
-            val currentUserId  = sessionManager.getUsername() ?: "guest"
             val taskDatabase   = remember { TaskDatabase.getDatabase(context) }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }
             val taskViewModel: TaskViewModel = viewModel(
-                key     = currentUserId,
+                key     = "task_$currentUserId",
                 factory = TaskViewModelFactory(taskRepository, currentUserId)
             )
             TaskScreen(navController, taskViewModel)
@@ -131,7 +141,6 @@ fun AppNavigation(
     }
 }
 
-// ── BOTTOM NAV (unchanged) ────────────────────────────────────────────────────
 @Composable
 fun CampusBottomNav(navController: NavController) {
     val navBackStackEntry = navController.currentBackStackEntryAsState()

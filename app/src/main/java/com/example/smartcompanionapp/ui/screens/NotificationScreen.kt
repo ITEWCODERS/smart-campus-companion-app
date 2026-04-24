@@ -11,25 +11,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.ui.theme.*
-import com.example.smartcompanionapp.worker.AnnouncementWorkScheduler
+import com.google.firebase.messaging.FirebaseMessaging
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController) {
-    val context = LocalContext.current
 
     var announcements  by remember { mutableStateOf(true) }
     var deadlines      by remember { mutableStateOf(true) }
     var classReminders by remember { mutableStateOf(true) }
     var events         by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        if (announcements) AnnouncementWorkScheduler.schedule(context)
-    }
 
     Scaffold(
         containerColor = AppBackground,
@@ -38,10 +32,7 @@ fun NotificationsScreen(navController: NavController) {
                 title = { Text("Notifications") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -68,12 +59,19 @@ fun NotificationsScreen(navController: NavController) {
             item {
                 NotificationToggle(
                     label    = "Campus Announcements",
-                    subtitle = "Background sync every 15 minutes",
+                    // WorkManager is gone — the toggle now controls FCM topic subscription.
+                    // Unsubscribing means the device won't receive push notifications
+                    // for new announcements (the in-app real-time listener still works
+                    // when the app is open, but OS tray notifications are suppressed).
+                    subtitle = "Push notifications for new announcements",
                     checked  = announcements,
                     onChange = { enabled ->
                         announcements = enabled
-                        if (enabled) AnnouncementWorkScheduler.schedule(context)
-                        else         AnnouncementWorkScheduler.cancel(context)
+                        if (enabled) {
+                            FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+                        } else {
+                            FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
+                        }
                     }
                 )
             }

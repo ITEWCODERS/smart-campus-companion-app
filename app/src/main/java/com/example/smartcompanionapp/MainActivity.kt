@@ -19,57 +19,49 @@ import com.example.smartcompanionapp.ui.navigation.AppNavigation
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.SmartCompanionAppTheme
 import com.example.smartcompanionapp.worker.AnnouncementWorkScheduler
+import com.google.firebase.messaging.FirebaseMessaging
 
-/**
- * STEP 13 — MAIN ACTIVITY
- *
- * CHANGES from original:
- *
- * 1. REQUEST POST_NOTIFICATIONS PERMISSION (Android 13+)
- *    Without this permission, no notifications appear on API 33+.
- *    We use the ActivityResultContracts launcher pattern (the modern approach).
- *    The request is shown ONCE on first launch. The WorkManager still schedules
- *    even if permission is denied; it will post notifications if permission is
- *    later granted by the user in Settings.
- *
- * 2. SCHEDULE WORKMANAGER ON LAUNCH
- *    AnnouncementWorkScheduler.schedule() is called in onCreate().
- *    This ensures the periodic background sync starts immediately after install
- *    or after the app is updated/reinstalled.
- *    KEEP policy in the scheduler prevents duplicate jobs on subsequent opens.
- *
- * Everything else (dark theme, session check) is unchanged from original.
- */
 class MainActivity : ComponentActivity() {
 
-    // ── PERMISSION LAUNCHER (Android 13+) ────────────────────────────────────
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        // Granted → WorkManager will be able to post notifications.
-        // Denied  → WorkManager still runs but notifications are suppressed by OS.
-        // We don't show a rationale here to keep UX simple; users can enable in Settings.
-    }
+    ) { }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // ── 1. REQUEST NOTIFICATION PERMISSION ───────────────────────────────
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // API 33+
+        // Request notification permission (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this, Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // Show system permission dialog
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
 
-        // ── 2. SCHEDULE WORKMANAGER PERIODIC SYNC ────────────────────────────
-        // ExistingPeriodicWorkPolicy.KEEP means this is safe to call every time.
-        // If a job is already scheduled, it is left untouched.
+        // Subscribe to FCM topic
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                android.util.Log.d("FCM", "Your Device Token: $token")
+            } else {
+                android.util.Log.e("FCM", "Failed to get token", task.exception)
+            }
+        }
+
+        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    android.util.Log.d("FCM", "Subscribed to announcements topic")
+                } else {
+                    android.util.Log.e("FCM", "Topic subscription failed", task.exception)
+                }
+            }
+
+        // Start the background sync worker
         AnnouncementWorkScheduler.schedule(this)
 
         setContent {

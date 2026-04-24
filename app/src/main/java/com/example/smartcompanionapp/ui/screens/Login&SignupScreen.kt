@@ -39,6 +39,7 @@ import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.AuthState
 import com.example.smartcompanionapp.viewmodel.AuthViewModel
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -311,8 +312,10 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = vie
         if (authState is AuthState.Success) {
             val user = (authState as AuthState.Success).user
             sessionManager.saveSession(user.username, user.role)
+            FirebaseMessaging.getInstance().subscribeToTopic("announcements") // ← add this
             showLoading = true
             authViewModel.resetState()
+
         }
     }
 

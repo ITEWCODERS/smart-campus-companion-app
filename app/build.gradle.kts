@@ -10,6 +10,20 @@ android {
     namespace = "com.example.smartcompanionapp"
     compileSdk = 36
 
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/main/assets")
+        }
+    }
+    packaging {
+        resources {
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+        }
+    }
     defaultConfig {
         applicationId = "com.example.smartcompanionapp"
         minSdk = 24
@@ -53,24 +67,22 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
-//    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
-//    implementation("com.google.firebase:firebase-auth")
-//    implementation("com.google.firebase:firebase-firestore")
-
-    //messaging notif
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
-
-// ✅ CHANGED: use firebase-messaging instead of firebase-messaging-ktx
     implementation("com.google.firebase:firebase-messaging")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    //
 
-    // ── WORKMANAGER ──────────────────────────────────────────────────────────
-    // Core WorkManager with Kotlin coroutine support
+    // FCM v1 OAuth2 token generation — reads service_account.json from assets
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
+
+    // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-    //
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -79,7 +91,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
 }

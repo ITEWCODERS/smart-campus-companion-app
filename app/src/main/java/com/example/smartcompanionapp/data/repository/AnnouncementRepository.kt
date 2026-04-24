@@ -3,62 +3,119 @@ package com.example.smartcompanionapp.data.repository
 import com.example.smartcompanionapp.data.database.announcement.dao.AnnouncementDao
 import com.example.smartcompanionapp.data.model.Announcement
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/**
- * ANNOUNCEMENT REPOSITORY
- *
- * FIXES:
- * 1. insertSingle() now writes to Firestore FIRST, then Room.
- *    This means other users will see the announcement on their next sync,
- *    AND it won't be wiped by syncAnnouncements() because it exists in Firestore.
- *
- * 2. After inserting, we immediately trigger a local notification so the
- *    posting user also gets notified right away (not waiting 15 min for WorkManager).
- *
- * ROOT CAUSE of the original bug:
- *    syncAnnouncements() calls deleteOldAnnouncements(titles) which deletes every
- *    Room row whose title is NOT in the Firestore snapshot. Since locally-added
- *    announcements were only in Room (never pushed to Firestore), they were wiped
- *    on every refresh/periodic sync.
- */
 class AnnouncementRepository(
     private val dao: AnnouncementDao,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val userId: String = ""
 ) {
     private val collection = firestore.collection("announcements")
 
-    // ── FLOWS (Room → UI) ─────────────────────────────────────────────────────
+    val allAnnouncements: Flow<List<Announcement>> = dao.getAllNews(userId)
+    val topUnread: Flow<Announcement?> = dao.getTopUnreadAnnouncement(userId)
 
-    /** Full list, newest first. Observed by AllAnnouncementsScreen. */
-    val allAnnouncements: Flow<List<Announcement>> = dao.getAllNews()
+    // ── NEW: emits announcements that are truly new to this device ────────────
+    // ViewModel observes this and fires exactly ONE notification per new item.
+    // Using SharedFlow (replay=0) so old events don't re-fire on re-subscription.
+    private val _newAnnouncementsFlow = MutableSharedFlow<List<Announcement>>(replay = 0)
+    val newAnnouncementsFlow: SharedFlow<List<Announcement>> = _newAnnouncementsFlow.asSharedFlow()
 
-    /** Single top unread item. Observed by Dashboard banner. */
-    val topUnread: Flow<Announcement?> = dao.getTopUnreadAnnouncement()
+    // Tracks titles we've already notified about this session to prevent duplicates.
+    // Persists in memory for the lifetime of the repository (= ViewModel lifetime).
+    private val notifiedTitles = mutableSetOf<String>()
 
-    // ── READ ──────────────────────────────────────────────────────────────────
-
-    suspend fun markAsRead(id: Int) = dao.markAsRead(id)
-
-    // ── WRITE ─────────────────────────────────────────────────────────────────
+    private var listenerRegistration: ListenerRegistration? = null
 
     /**
-     * Insert a single announcement.
-     *
-     * FIX: Writes to Firestore FIRST so that:
-     *   (a) Other users see it on their next WorkManager sync.
-     *   (b) syncAnnouncements() won't delete it (it now exists in Firestore).
-     *
-     * Then inserts into local Room so the UI updates instantly without
-     * waiting for the next WorkManager cycle.
-     *
-     * If Firestore write fails, we still insert locally so the user
-     * doesn't lose their entry — it will be re-synced later.
+     * Starts the Firestore real-time listener.
+     * Any change to the collection pushes a full snapshot instantly.
+     * New announcements are diffed and emitted via [newAnnouncementsFlow].
+     */
+    fun startRealtimeListener(scope: CoroutineScope) {
+        listenerRegistration?.remove()
+
+        listenerRegistration = collection
+            .orderBy("datePosted", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        // Preserve existing read states
+                        val existingReadMap = dao.getAllTitles(userId)
+                            .mapNotNull { title ->
+                                dao.getByTitle(title, userId)?.let { title to it.isRead }
+                            }
+                            .toMap()
+
+                        val remote = snapshot.documents.mapNotNull { doc ->
+                            val title   = doc.getString("title")    ?: return@mapNotNull null
+                            val content = doc.getString("content")  ?: return@mapNotNull null
+                            val date    = doc.getLong("datePosted") ?: System.currentTimeMillis()
+                            Announcement(
+                                title      = title,
+                                content    = content,
+                                datePosted = date,
+                                isRead     = existingReadMap[title] ?: false,
+                                userId     = userId
+                            )
+                        }
+
+                        // Diff: which titles are new to Room AND not yet notified?
+                        val existingTitles = dao.getAllTitles(userId).toHashSet()
+                        val trulyNew = remote.filter { announcement ->
+                            announcement.title !in existingTitles &&
+                                    announcement.title !in notifiedTitles
+                        }
+
+                        // Write all to Room (upsert triggers allAnnouncements Flow)
+                        dao.syncAnnouncements(remote, userId)
+
+                        // Emit new items for notification — only if there are any
+                        if (trulyNew.isNotEmpty()) {
+                            // Fetch the stored versions (with auto-generated Room IDs)
+                            val storedNew = trulyNew.mapNotNull {
+                                dao.getByTitle(it.title, userId)
+                            }
+                            // Mark as notified BEFORE emitting to prevent race conditions
+                            notifiedTitles.addAll(trulyNew.map { it.title })
+                            _newAnnouncementsFlow.emit(storedNew)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+    }
+
+    fun stopRealtimeListener() {
+        listenerRegistration?.remove()
+        listenerRegistration = null
+    }
+
+    suspend fun markAsRead(id: Int) = dao.markAsRead(id, userId)
+
+    /**
+     * Writes a new announcement to Firestore + upserts locally.
+     * The real-time listener will pick it up on ALL other devices automatically.
+     * The poster's device gets the local upsert immediately (no listener round-trip needed).
+     * We also mark the title as notified here so when the listener fires back on
+     * the poster's device it does NOT emit a duplicate notification.
      */
     suspend fun insertSingle(announcement: Announcement) {
-        // ── 1. Push to Firestore ──────────────────────────────────────────────
+        // Pre-mark as notified so the listener callback on THIS device skips it
+        notifiedTitles.add(announcement.title)
+
         val firestoreDoc = hashMapOf(
             "title"      to announcement.title,
             "content"    to announcement.content,
@@ -66,32 +123,28 @@ class AnnouncementRepository(
             "isRead"     to false
         )
         try {
-            // Use title as document ID to match the unique-title constraint in Room.
-            // This also prevents duplicates in Firestore if the same title is added twice.
-            collection
-                .document(announcement.title)
-                .set(firestoreDoc)
-                .await()
+            collection.document(announcement.title).set(firestoreDoc).await()
         } catch (e: Exception) {
-            // Firestore write failed (offline?) — still save locally
             e.printStackTrace()
         }
-
-        // ── 2. Insert into Room ───────────────────────────────────────────────
-        // IGNORE conflict means if the title already exists locally, this is a no-op.
-        dao.insertAnnouncements(listOf(announcement))
+        dao.upsertAnnouncements(listOf(announcement.copy(userId = userId)))
     }
 
     /**
-     * WorkManager sync — called by AnnouncementSyncWorker every 15 minutes.
-     * Replaces the entire local cache with the Firestore snapshot.
-     * Safe now because insertSingle() pushes to Firestore first.
+     * One-off manual sync (pull-to-refresh).
+     * Does NOT trigger duplicate notifications because [notifiedTitles] guards them.
      */
     suspend fun syncFromFirestore(): List<Announcement> {
         val snapshot = collection
             .orderBy("datePosted", Query.Direction.DESCENDING)
             .get()
             .await()
+
+        val existingReadMap = dao.getAllTitles(userId)
+            .mapNotNull { title ->
+                dao.getByTitle(title, userId)?.let { title to it.isRead }
+            }
+            .toMap()
 
         val remote = snapshot.documents.mapNotNull { doc ->
             val title   = doc.getString("title")    ?: return@mapNotNull null
@@ -101,32 +154,34 @@ class AnnouncementRepository(
                 title      = title,
                 content    = content,
                 datePosted = date,
-                isRead     = false
+                isRead     = existingReadMap[title] ?: false,
+                userId     = userId
             )
         }
 
-        // Atomic: delete stale + insert new (transaction in DAO)
-        dao.syncAnnouncements(remote)
+        // Diff for notifications on first sync (e.g. existing announcements on login)
+        val existingTitles = dao.getAllTitles(userId).toHashSet()
+        val trulyNew = remote.filter { it.title !in existingTitles && it.title !in notifiedTitles }
+
+        dao.syncAnnouncements(remote, userId)
+
+        if (trulyNew.isNotEmpty()) {
+            val storedNew = trulyNew.mapNotNull { dao.getByTitle(it.title, userId) }
+            notifiedTitles.addAll(trulyNew.map { it.title })
+            _newAnnouncementsFlow.emit(storedNew)
+        }
 
         return remote
     }
 
-    /**
-     * Diff helper: returns titles in [remote] that don't exist locally yet.
-     * Used by WorkManager to know which announcements deserve a notification.
-     */
     suspend fun findNewTitles(remote: List<Announcement>): List<Announcement> {
-        val existing = dao.getAllTitles().toHashSet()
+        val existing = dao.getAllTitles(userId).toHashSet()
         return remote.filter { it.title !in existing }
     }
 
-    /** Fetch a stored announcement by title (to get its auto-generated Room ID). */
-    suspend fun getByTitle(title: String): Announcement? = dao.getByTitle(title)
-
-    // ── DELETE ────────────────────────────────────────────────────────────────
+    suspend fun getByTitle(title: String): Announcement? = dao.getByTitle(title, userId)
 
     suspend fun delete(announcement: Announcement) {
-        // Delete from both Room and Firestore so it stays gone after next sync
         dao.deleteAnnouncement(announcement)
         try {
             collection.document(announcement.title).delete().await()
