@@ -25,16 +25,17 @@ import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.*
-import com.google.firebase.messaging.FirebaseMessaging
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
-    val systemDark = isSystemInDarkTheme()
     
+    val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
+    val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState()
+    
+    val systemDark = isSystemInDarkTheme()
     val isDark = isDarkModePref ?: systemDark
 
     Scaffold(
@@ -81,8 +82,16 @@ fun SettingsScreen(navController: NavController) {
                 SettingsCard(
                     icon = Icons.Rounded.Notifications,
                     title = "Notifications",
-                    subtitle = "Manage push settings",
-                    onClick = { navController.navigate("notifications") }
+                    trailing = {
+                        Switch(
+                            checked = isNotificationsEnabled,
+                            onCheckedChange = { sessionManager.setNotificationsEnabled(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = UniPrimary,
+                                checkedTrackColor = UniPrimary.copy(alpha = 0.38f)
+                            )
+                        )
+                    }
                 )
             }
 
@@ -108,17 +117,10 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.AutoMirrored.Rounded.Logout,
                     title = "Log out",
                     onClick = {
-//                        sessionManager.clearSession()
-//                        navController.navigate(Screen.GetStarted.route) {
-//                            popUpTo(0) { inclusive = true }
-//                        }
-                        FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
-                            .addOnCompleteListener {
-                                sessionManager.clearSession()
-                                navController.navigate(Screen.GetStarted.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            }
+                        sessionManager.clearSession()
+                        navController.navigate(Screen.GetStarted.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }
