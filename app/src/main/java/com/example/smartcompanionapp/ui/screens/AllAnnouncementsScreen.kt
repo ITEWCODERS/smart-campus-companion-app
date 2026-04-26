@@ -142,7 +142,7 @@ fun AllAnnouncementsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
                 ) {
-                    Text("Add")
+                    Text("Add", color = AppBackground)
                 }
             },
             dismissButton = {
