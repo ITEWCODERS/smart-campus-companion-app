@@ -20,6 +20,13 @@ class DashboardViewModel(
     private val _state = MutableStateFlow(DashboardState())
     val state: StateFlow<DashboardState> = _state.asStateFlow()
 
+    // Add this function
+    fun setAdminPrivileges(isAdmin: Boolean) {
+        _state.update { it.copy(isAdmin = isAdmin) }
+    }
+
+    // Private state to hold IDs of announcements dismissed in this session
+    private val dismissedInSession = MutableStateFlow<Set<Int>>(emptySet())
     val allAnnouncements: StateFlow<List<Announcement>> =
         repository.allAnnouncements
             .stateIn(

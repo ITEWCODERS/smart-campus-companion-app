@@ -39,6 +39,7 @@ import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.AuthState
 import com.example.smartcompanionapp.viewmodel.AuthViewModel
+import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.delay
 import kotlin.math.PI
@@ -144,9 +145,9 @@ fun GetStartedScreen(onLogin: () -> Unit, onSignUp: () -> Unit) {
                         ),
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Text(
                         text = "A modern minimal academic experience designed for your daily campus life.",
                         style = MaterialTheme.typography.bodyLarge.copy(
@@ -256,9 +257,9 @@ fun LoadingScreen(onFinished: () -> Unit) {
                 modifier = Modifier.size(100.dp),
                 tint = BrandBlue
             )
-            
+
             Spacer(modifier = Modifier.height(48.dp))
-            
+
             Text(
                 text = "Loading campus services...",
                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -266,9 +267,9 @@ fun LoadingScreen(onFinished: () -> Unit) {
                     color = TextBlack
                 )
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // Progress Bar Loading
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 LinearProgressIndicator(
@@ -280,9 +281,9 @@ fun LoadingScreen(onFinished: () -> Unit) {
                     color = BrandBlue,
                     trackColor = BrandBlueLight,
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = "${(animatedProgress * 100).toInt()}%",
                     style = MaterialTheme.typography.labelMedium,
@@ -296,10 +297,18 @@ fun LoadingScreen(onFinished: () -> Unit) {
 
 
 @Composable
-fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = viewModel()) {
+fun LoginScreen(
+    navController: NavController,
+    // Add the '= viewModel()' to make it optional in Navigation.kt
+    authViewModel: AuthViewModel = viewModel(),
+    // This is passed from Navigation.kt
+    dashboardViewModel: DashboardViewModel,
+    // Add a default role so Navigation.kt doesn't have to pass it
+    selectedRole: UserRole = UserRole.USER
+) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.USER) }
@@ -309,9 +318,13 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = vie
     val authState by authViewModel.authState.collectAsState()
 
     LaunchedEffect(authState) {
-        if (authState is AuthState.Success) {
-            val user = (authState as AuthState.Success).user
+        if (authState is AuthState.Success) {            val user = (authState as AuthState.Success).user
             sessionManager.saveSession(user.username, user.role)
+
+            // --- ADD THIS LINE TO GIVE ADMIN PRIVILEGES ---
+            dashboardViewModel.setAdminPrivileges(selectedRole == UserRole.ADMIN)
+            // ----------------------------------------------
+
             FirebaseMessaging.getInstance().subscribeToTopic("announcements") // ← add this
             showLoading = true
             authViewModel.resetState()
@@ -445,7 +458,7 @@ fun SignUpScreen(navController: NavController, authViewModel: AuthViewModel = vi
     var phoneError by remember { mutableStateOf<String?>(null) }
     var lengthError by remember { mutableStateOf<String?>(null) }
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
-    
+
     val authState by authViewModel.authState.collectAsState()
 
     // Real-time validation (equivalent to TextWatcher)
@@ -482,9 +495,9 @@ fun SignUpScreen(navController: NavController, authViewModel: AuthViewModel = vi
         }
     }
 
-    val isFormValid = username.length >= 6 && 
-                      email.isNotBlank() && emailError == null && 
-                      phoneNumber.length == 11 && phoneError == null && 
+    val isFormValid = username.length >= 6 &&
+                      email.isNotBlank() && emailError == null &&
+                      phoneNumber.length == 11 && phoneError == null &&
                       password.length >= 6 &&
                       confirmPassword == password
 

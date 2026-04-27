@@ -13,6 +13,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -183,6 +185,7 @@ fun AllAnnouncementsScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = AppSurface)
             )
         },
+        // ONLY SHOW FAB IF ADMIN
         floatingActionButton = {
             FloatingActionButton(
                 onClick        = { showAddDialog = true },
@@ -233,6 +236,15 @@ fun AllAnnouncementsScreen(
                     }
                 }
 
+        if (showSheet && state.isAdmin) {
+            AddAnnouncementBottomSheet(
+                onDismiss = { showSheet = false },
+                onPost = { title, content ->
+                    val newAnnouncement = Announcement(
+                        title = title,
+                        content = content,
+                        datePosted = System.currentTimeMillis(),
+                        isRead = false
                 items(announcements, key = { it.id }) { announcement ->
                     AnnouncementListCard(
                         announcement = announcement,
@@ -246,69 +258,94 @@ fun AllAnnouncementsScreen(
     }
 }
 
-// ── ANNOUNCEMENT CARD ─────────────────────────────────────────────────────────
 @Composable
-fun AnnouncementListCard(
-    announcement: Announcement,
-    onMarkAsRead: () -> Unit
+fun FullWidthAnnouncementCard(
+    news: Announcement,
+    isAdmin: Boolean, // New parameter
+    onDelete: () -> Unit
 ) {
-    val backgroundColor by animateColorAsState(
-        targetValue   = if (announcement.isRead) AppSurface else UniPrimary.copy(alpha = 0.07f),
-        animationSpec = tween(400),
-        label         = "card_bg"
-    )
-    val dateStr = remember(announcement.datePosted) {
-        SimpleDateFormat("MMM d, yyyy  •  h:mm a", Locale.getDefault()).format(Date(announcement.datePosted))
-    }
-
-    Surface(
-        modifier       = Modifier.fillMaxWidth(),
-        shape          = RoundedCornerShape(16.dp),
-        color          = backgroundColor,
-        tonalElevation = if (announcement.isRead) 0.dp else 2.dp
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (!announcement.isRead) {
-                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(UniPrimary))
-                    Spacer(Modifier.width(8.dp))
-                }
-                Text(
-                    text       = announcement.title,
-                    style      = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (announcement.isRead) FontWeight.Normal else FontWeight.Bold,
-                    color      = TextPrimary,
-                    modifier   = Modifier.weight(1f),
-                    maxLines   = 2,
-                    overflow   = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(Modifier.height(6.dp))
-            Text(
-                announcement.content,
-                style    = MaterialTheme.typography.bodyMedium,
-                color    = TextSecondary,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(12.dp))
+    val dateFormat = SimpleDateFormat("MMM dd, yyyy, h:mm a", Locale.getDefault())
+    val dateString = dateFormat.format(Date(news.datePosted))
 
             Row(
                 modifier            = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment   = Alignment.CenterVertically
             ) {
-                Text(dateStr, style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(alpha = 0.65f))
-                if (!announcement.isRead) {
-                    TextButton(onClick = onMarkAsRead, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
-                        Icon(Icons.Rounded.CheckCircle, null, modifier = Modifier.size(16.dp), tint = UniPrimary)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Mark as Read", style = MaterialTheme.typography.labelMedium, color = UniPrimary)
+                Text(
+                    text = news.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = UniPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // ONLY SHOW DELETE BUTTON IF ADMIN
+                if (isAdmin) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Announcement",
+                            tint = Color.Red.copy(alpha = 0.7f)
+                        )
                     }
-                } else {
-                    Text("✓ Read", style = MaterialTheme.typography.labelSmall, color = TextSecondary.copy(alpha = 0.45f))
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddAnnouncementBottomSheet(
+    onDismiss: () -> Unit,
+    onPost: (String, String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = AppSurface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Post New Announcement",
+                style = MaterialTheme.typography.headlineSmall,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold
+            )
+
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text("Title") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = content,
+                onValueChange = { content = it },
+                label = { Text("Content") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
+            )
+
+            Button(
+                onClick = { if (title.isNotBlank() && content.isNotBlank()) onPost(title, content) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary),
+                enabled = title.isNotBlank() && content.isNotBlank()
+            ) {
+                Text("Post Announcement", color = Color.White)
             }
         }
     }
