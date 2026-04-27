@@ -1,6 +1,6 @@
 package com.example.smartcompanionapp.domain
 
-import com.example.smartcompanionapp.data.model.Task  // ✅ Only import the ONE Room entity
+import com.example.smartcompanionapp.data.model.Task
 
 // ─────────────────────────────────────────────
 // IMMUTABLE UI STATE
@@ -11,7 +11,6 @@ sealed class TaskUiState {
 
     object Loading : TaskUiState()
 
-    // ✅ List<Task> — uses the single Room entity, not the old "Tasks" model class
     data class Success(val tasks: List<Task>) : TaskUiState()
 
     data class Error(val message: String) : TaskUiState()

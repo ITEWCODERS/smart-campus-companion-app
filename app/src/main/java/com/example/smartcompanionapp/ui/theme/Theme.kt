@@ -12,31 +12,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = BrandBlue,
-    secondary = BrandBlueDark,
-    tertiary = DeadlineOrange,
-    background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E), // Slightly lighter than background for cards/surfaces
+    primary = AuroraVividPurple,
+    secondary = AuroraSoftTeal,
+    tertiary = AuroraDeepIndigo,
+    background = Color(0xFF0F051D), 
+    surface = Color(0xFF1B0D33),
     onPrimary = Color.White,
-    onSecondary = Color.White,
+    onSecondary = AuroraDeepIndigo,
     onTertiary = Color.White,
-    onBackground = Color.White,
-    onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFB0B0B0) // For secondary text
+    onBackground = Color.White,       // PART 3: Force pure white for visibility
+    onSurface = Color.White,          // PART 3: Force pure white for visibility
+    onSurfaceVariant = Color(0xFFE0E0E0) // Bright grey for secondary text
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandBlue,
-    secondary = BrandBlueDark,
-    tertiary = DeadlineOrange,
-    background = Color(0xFFF0F0F0), // Matching your existing hardcoded light colors
+    primary = AuroraVividPurple,
+    secondary = AuroraSoftTeal,
+    tertiary = AuroraDeepIndigo,
+    background = Color(0xFFFBF9FF),
     surface = Color.White,
     onPrimary = Color.White,
-    onSecondary = Color.White,
+    onSecondary = AuroraDeepIndigo,
     onTertiary = Color.White,
-    onBackground = TextBlack,
-    onSurface = TextBlack,
-    onSurfaceVariant = TextGray
+    onBackground = TextBlackStatic,
+    onSurface = TextBlackStatic,
+    onSurfaceVariant = TextGrayStatic
 )
 
 @Composable

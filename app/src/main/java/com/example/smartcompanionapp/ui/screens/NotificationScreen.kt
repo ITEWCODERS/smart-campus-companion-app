@@ -11,18 +11,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController) {
-    var announcements by remember { mutableStateOf(true) }
-    var deadlines by remember { mutableStateOf(true) }
-    var classReminders by remember { mutableStateOf(true) }
-    var events by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
+    var announcements by remember { mutableStateOf(sessionManager.isAnnouncementsEnabled()) }
+    var deadlines by remember { mutableStateOf(sessionManager.isDeadlinesEnabled()) }
+    var classReminders by remember { mutableStateOf(sessionManager.isClassRemindersEnabled()) }
+    var events by remember { mutableStateOf(sessionManager.isEventsEnabled()) }
 
     Scaffold(
         containerColor = AppBackground,
@@ -55,10 +60,30 @@ fun NotificationsScreen(navController: NavController) {
                 )
             }
 
-            item { NotificationToggle("Campus Announcements", announcements) { announcements = it } }
-            item { NotificationToggle("Deadlines & Assignments", deadlines) { deadlines = it } }
-            item { NotificationToggle("Class Reminders", classReminders) { classReminders = it } }
-            item { NotificationToggle("Events & Activities", events) { events = it } }
+            item { 
+                NotificationToggle("Campus Announcements", announcements) { 
+                    announcements = it
+                    sessionManager.setAnnouncementsEnabled(it)
+                } 
+            }
+            item { 
+                NotificationToggle("Deadlines & Assignments", deadlines) { 
+                    deadlines = it
+                    sessionManager.setDeadlinesEnabled(it)
+                } 
+            }
+            item { 
+                NotificationToggle("Class Reminders", classReminders) { 
+                    classReminders = it
+                    sessionManager.setClassRemindersEnabled(it)
+                } 
+            }
+            item { 
+                NotificationToggle("Events & Activities", events) { 
+                    events = it
+                    sessionManager.setEventsEnabled(it)
+                } 
+            }
         }
     }
 }
@@ -73,7 +98,8 @@ private fun NotificationToggle(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
-        color = AppSurface
+        color = AppSurface,
+        onClick = { onChange(!checked) }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -82,7 +108,7 @@ private fun NotificationToggle(
             Icon(
                 Icons.Rounded.Notifications,
                 contentDescription = null,
-                tint = UniAccent,
+                tint = AuroraSoftTeal,
                 modifier = Modifier.size(26.dp)
             )
             Spacer(Modifier.width(16.dp))

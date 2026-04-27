@@ -1,6 +1,6 @@
 package com.example.smartcompanionapp.domain
 
-import com.example.smartcompanionapp.data.model.Task  // ✅ Only import the ONE Room entity
+import com.example.smartcompanionapp.data.model.Task
 
 // ─────────────────────────────────────────────
 // INTENT HANDLING
@@ -12,14 +12,14 @@ sealed class TaskIntent {
 
     data class AddTask(
         val title: String,
-        val description: String,   // ✅ Uses Task.description
-        val subject: String,        // ✅ Uses Task.subject
+        val description: String,   // Uses Task.description
+        val subject: String,        // Uses Task.subject
         val date: String,           // Scheduled date — ScheduleScreen filters by this
         val dueDate: String         // Deadline — shown on TaskCard
     ) : TaskIntent()
 
     data class UpdateTask(
-        val original: Task,         // ✅ Was "Tasks", now correctly "Task" (Room entity)
+        val original: Task,
         val title: String,
         val description: String,
         val subject: String,
@@ -27,6 +27,6 @@ sealed class TaskIntent {
         val dueDate: String
     ) : TaskIntent()
 
-    data class DeleteTask(val task: Task) // ✅ Was "Tasks", now correctly "Task"
+    data class DeleteTask(val task: Task)
         : TaskIntent()
 }
