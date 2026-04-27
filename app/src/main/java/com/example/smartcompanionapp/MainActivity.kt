@@ -20,63 +20,48 @@ import com.example.smartcompanionapp.ui.navigation.AppNavigation
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.SmartCompanionAppTheme
 import com.example.smartcompanionapp.worker.AnnouncementWorkScheduler
-import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            Log.d("MainActivity", "Notification permission granted")
-        }
-    }
+    ) { }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        try {
-            // Ensure Firebase is initialized
-            FirebaseApp.initializeApp(this)
-            
-            // Start the background sync worker safely
-            AnnouncementWorkScheduler.schedule(this)
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Initialization error: ${e.message}")
+        // Request notification permission (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
 
         setContent {
             val context = LocalContext.current
             val sessionManager = remember { SessionManager(context) }
             
-            val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState(initial = null)
-            val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState(initial = true)
+            val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
+            val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState()
             val useDarkTheme = isDarkModePref ?: isSystemInDarkTheme()
 
-            // Request notification permission (Android 13+)
-            LaunchedEffect(Unit) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (ContextCompat.checkSelfPermission(
-                            context, Manifest.permission.POST_NOTIFICATIONS
-                        ) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
-            }
-
-            // Handle Notifications enabling/disabling reactively
+            // REACITIVE INTEGRATION: Enable/Disable system features based on Master Toggle
             LaunchedEffect(isNotificationsEnabled) {
-                if (isNotificationsEnabled == true) {
+                if (isNotificationsEnabled) {
+                    Log.d("NotificationSync", "Notifications enabled: Subscribing and Scheduling...")
                     FirebaseMessaging.getInstance().subscribeToTopic("announcements")
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) Log.d("FCM", "Subscribed to announcements")
                         }
                     AnnouncementWorkScheduler.schedule(context)
-                } else if (isNotificationsEnabled == false) {
+                } else {
+                    Log.d("NotificationSync", "Notifications disabled: Unsubscribing and Cancelling...")
                     FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) Log.d("FCM", "Unsubscribed from announcements")
