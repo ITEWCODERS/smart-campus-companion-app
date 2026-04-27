@@ -49,6 +49,8 @@ import com.example.smartcompanionapp.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.example.smartcompanionapp.viewmodel.DashboardViewModel
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -213,10 +215,18 @@ fun SmartCampusLogo(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LoginScreen(navController: NavController, authViewModel: AuthViewModel = viewModel()) {
+fun LoginScreen(
+    navController: NavController,
+    // Add the '= viewModel()' to make it optional in Navigation.kt
+    authViewModel: AuthViewModel = viewModel(),
+    // This is passed from Navigation.kt
+    dashboardViewModel: DashboardViewModel,
+    // Add a default role so Navigation.kt doesn't have to pass it
+    selectedRole: UserRole = UserRole.USER
+) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(UserRole.USER) }

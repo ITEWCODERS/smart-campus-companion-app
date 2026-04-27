@@ -83,9 +83,19 @@ fun AppNavigation(
                 onSignUp = { navController.navigate(Screen.Signup.route) }
             )
         }
-        composable(Screen.Login.route)  { LoginScreen(navController) }
-        composable(Screen.Signup.route) { SignUpScreen(navController) }
-
+        composable(Screen.Login.route) {
+            // We pass the dashboardViewModel that was created on line 73
+            LoginScreen(
+                navController = navController,
+                dashboardViewModel = dashboardViewModel
+            )
+        }
+        composable(Screen.Signup.route) {
+            SignUpScreen(navController)
+        }
+        
+        // ── TASK-RELATED SCREENS (Isolated by UserId) ────────────────────────
+        
         composable(Screen.Dashboard.route) {
             val taskDatabase   = remember { TaskDatabase.getDatabase(context) }
             val taskRepository = remember { TaskRepository(taskDatabase.taskDao(), firestore) }

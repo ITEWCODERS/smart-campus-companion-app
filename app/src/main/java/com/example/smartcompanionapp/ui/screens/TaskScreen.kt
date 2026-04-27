@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Task
@@ -67,7 +68,9 @@ fun TaskScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddTaskDialog = true },
-                shape = CircleShape
+                shape = CircleShape,
+                containerColor = UniPrimary,
+                contentColor = Color.White
             ) {
                 Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
             }
@@ -89,15 +92,19 @@ fun TaskScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("There are no tasks yet")
+                            Text(
+                                text = "There are no tasks yet",
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     } else {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(horizontal = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
                         ) {
                             items(state.tasks, key = { it.id }) { task ->
                                 TaskCard(
@@ -118,7 +125,7 @@ fun TaskScreen(
                 is TaskUiState.Error -> {
                     Text(
                         text = state.message,
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -154,6 +161,9 @@ fun TaskScreen(
     }
 }
 
+// ─────────────────────────────────────────────
+// DATE HELPER
+// ─────────────────────────────────────────────
 private fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return formatter.format(Date(millis))
@@ -426,6 +436,9 @@ fun EditTaskDialog(
     )
 }
 
+// ─────────────────────────────────────────────
+// TASK CARD
+// ─────────────────────────────────────────────
 @Composable
 fun TaskCard(
     task: Task,
@@ -436,9 +449,9 @@ fun TaskCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -483,29 +496,41 @@ fun TaskCard(
                     color = TextSecondary
                 )
             }
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {
-                            menuExpanded = false
-                            onEdit()
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) }
+
+            // ── BODY SECTION ──────────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Description (if present)
+                if (task.description.isNotBlank()) {
+                    Text(
+                        text = task.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {
-                            menuExpanded = false
-                            onDelete()
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null) }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Start Date (Secondary context info)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Event,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = TextSecondary.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Starts: ${task.date}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextSecondary.copy(alpha = 0.7f)
                     )
                 }
             }
