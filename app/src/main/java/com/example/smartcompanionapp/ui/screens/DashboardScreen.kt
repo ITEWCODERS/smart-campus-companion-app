@@ -1,5 +1,7 @@
 package com.example.smartcompanionapp.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -42,8 +44,11 @@ import com.example.smartcompanionapp.viewmodel.DashboardViewModel
 import com.example.smartcompanionapp.viewmodel.TaskViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DashboardScreen(
     navController: NavController,
@@ -116,12 +121,28 @@ fun DashboardScreen(
                 }
             }
 
-            // 3. Upcoming Task Card
+            // 3. Upcoming Task Card (Smart Deadline Sorting)
             item {
                 AnimatedEntrance(visible = startAnimation, delay = 300) {
                     Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                         val tasks = (taskState as? TaskUiState.Success)?.tasks ?: emptyList()
-                        val nextTask = tasks.firstOrNull()
+                        
+                        // Smart Sorting: Filter future deadlines and find the closest one
+                        val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                        val today = LocalDate.now()
+                        
+                        val nextTask = tasks
+                            .filter {
+                                try {
+                                    val dueDate = LocalDate.parse(it.dueDate, dateFormatter)
+                                    !dueDate.isBefore(today)
+                                } catch (e: Exception) { false }
+                            }
+                            .minByOrNull { 
+                                try { LocalDate.parse(it.dueDate, dateFormatter).toEpochDay() } 
+                                catch (e: Exception) { Long.MAX_VALUE }
+                            }
+
                         UpcomingTaskCard(nextTask)
                     }
                 }
@@ -397,7 +418,7 @@ fun UpcomingTaskCard(task: Task?) {
                             color = AuroraSoftTeal,
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Next Task", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = AuroraDeepIndigo, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Next Deadline", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = AuroraDeepIndigo, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(task.dueDate, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -407,7 +428,7 @@ fun UpcomingTaskCard(task: Task?) {
                     Spacer(modifier = Modifier.height(20.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(28.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.25f)), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Rounded.Description, null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.Timer, null, tint = Color.White, modifier = Modifier.size(18.dp))
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(task.description, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)

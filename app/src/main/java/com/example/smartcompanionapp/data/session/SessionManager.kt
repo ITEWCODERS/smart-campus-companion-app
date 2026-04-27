@@ -2,11 +2,13 @@ package com.example.smartcompanionapp.data.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class SessionManager(context: Context) {
+class SessionManager(private val context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("user_session", Context.MODE_PRIVATE)
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
@@ -112,7 +114,21 @@ class SessionManager(context: Context) {
     }
 
     fun logout() {
+        // 1. Firebase Sign Out
         auth.signOut()
+        
+        // 2. Google Sign Out (Important: clears the account selection cache)
+        try {
+            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
+            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            googleSignInClient.signOut().addOnCompleteListener {
+                // Optional: Clear or revoke access here if needed
+            }
+        } catch (e: Exception) {
+            // Handle silent error
+        }
+
+        // 3. Local session cleanup
         clearSession()
     }
 
