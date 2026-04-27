@@ -46,7 +46,10 @@ import com.google.firebase.auth.FirebaseAuth
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    
     val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
+    val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState()
+    
     val systemDark = isSystemInDarkTheme()
     val isDark = isDarkModePref ?: systemDark
     
@@ -240,6 +243,16 @@ fun SettingsScreen(navController: NavController) {
                 SettingsCard(
                     icon = Icons.Rounded.Notifications,
                     title = "Notifications",
+                    trailing = {
+                        Switch(
+                            checked = isNotificationsEnabled,
+                            onCheckedChange = { sessionManager.setNotificationsEnabled(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = UniPrimary,
+                                checkedTrackColor = UniPrimary.copy(alpha = 0.38f)
+                            )
+                        )
+                    }
                     subtitle = "Alerts & updates",
                     onClick = { navController.navigate("notifications") }
                 )

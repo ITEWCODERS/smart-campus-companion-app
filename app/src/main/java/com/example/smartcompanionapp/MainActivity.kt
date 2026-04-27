@@ -42,24 +42,28 @@ class MainActivity : ComponentActivity() {
             // Ensure Firebase is initialized
             FirebaseApp.initializeApp(this)
 
-            // Request notification permission (Android 13+)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(
-                        this, Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
+        setContent {
+            val context = LocalContext.current
+            val sessionManager = remember { SessionManager(context) }
+            
+            val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
+            val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState()
+            val useDarkTheme = isDarkModePref ?: isSystemInDarkTheme()
 
-            // Subscribe to FCM topic safely
-            FirebaseMessaging.getInstance().subscribeToTopic("announcements")
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Log.d("FCM", "Subscribed to announcements topic")
-                    } else {
-                        Log.e("FCM", "Topic subscription failed", task.exception)
-                    }
+            // Handle Notifications enabling/disabling reactively
+            LaunchedEffect(isNotificationsEnabled) {
+                if (isNotificationsEnabled) {
+                    FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) android.util.Log.d("FCM", "Subscribed to announcements")
+                        }
+                    AnnouncementWorkScheduler.schedule(context)
+                } else {
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) android.util.Log.d("FCM", "Unsubscribed from announcements")
+                        }
+                    AnnouncementWorkScheduler.cancel(context)
                 }
 
             // Start the background sync worker safely
@@ -94,7 +98,7 @@ fun MainApp(sessionManager: SessionManager) {
     }
 
     AppNavigation(
-        navController    = navController,
+        navController = navController,
         startDestination = startDestination
     )
 }

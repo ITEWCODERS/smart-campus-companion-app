@@ -18,15 +18,20 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_COURSE = "course"
         private const val KEY_DARK_MODE = "dark_mode"
+        private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         private const val KEY_PROFILE_IMAGE = "profile_image_uri"
     }
 
     private val _isDarkMode = MutableStateFlow(isDarkMode())
     val isDarkModeFlow: StateFlow<Boolean?> = _isDarkMode
 
+    private val _isNotificationsEnabled = MutableStateFlow(isNotificationsEnabled())
+    val isNotificationsEnabledFlow: StateFlow<Boolean> = _isNotificationsEnabled
+
     private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
-        if (key == KEY_DARK_MODE) {
-            _isDarkMode.value = isDarkMode()
+        when (key) {
+            KEY_DARK_MODE -> _isDarkMode.value = isDarkMode()
+            KEY_NOTIFICATIONS_ENABLED -> _isNotificationsEnabled.value = isNotificationsEnabled()
         }
     }
 
@@ -45,6 +50,9 @@ class SessionManager(context: Context) {
         }
     }
 
+    fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+    fun getUsername(): String? = prefs.getString(KEY_USERNAME, null)
+    fun getRole(): String? = prefs.getString(KEY_ROLE, null)
     fun updateProfile(username: String, email: String, course: String) {
         prefs.edit().apply {
             putString(KEY_USERNAME, username)
@@ -88,21 +96,22 @@ class SessionManager(context: Context) {
 
     fun setDarkMode(enabled: Boolean?) {
         prefs.edit().apply {
-            if (enabled == null) {
-                remove(KEY_DARK_MODE)
-            } else {
-                putBoolean(KEY_DARK_MODE, enabled)
-            }
+            if (enabled == null) remove(KEY_DARK_MODE)
+            else putBoolean(KEY_DARK_MODE, enabled)
             apply()
         }
     }
 
     fun isDarkMode(): Boolean? {
-        return if (prefs.contains(KEY_DARK_MODE)) {
-            prefs.getBoolean(KEY_DARK_MODE, false)
-        } else {
-            null
-        }
+        return if (prefs.contains(KEY_DARK_MODE)) prefs.getBoolean(KEY_DARK_MODE, false) else null
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled).apply()
+    }
+
+    fun isNotificationsEnabled(): Boolean {
+        return prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true) // Default to true
     }
 
     fun logout() {

@@ -51,6 +51,123 @@ fun AllAnnouncementsScreen(
     val userRole = sessionManager.getRole()
     val isAdmin = userRole == "admin"
 
+    LaunchedEffect(showSuccessSnackbar) {
+        if (showSuccessSnackbar) {
+            snackbarHostState.showSnackbar("Announcement added successfully!")
+            showSuccessSnackbar = false
+        }
+    }
+
+    // ── ADD ANNOUNCEMENT DIALOG ───────────────────────────────────────────────
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddDialog = false
+                newTitle      = ""
+                newContent    = ""
+                titleError    = false
+                contentError  = false
+            },
+            containerColor = AppSurface,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Rounded.AddAlert,
+                        contentDescription = null,
+                        tint     = UniAccent,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "New Announcement",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary
+                    )
+                }
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value         = newTitle,
+                        onValueChange = { newTitle = it; titleError = false },
+                        label         = { Text("Title") },
+                        placeholder   = { Text("e.g. Enrollment open for AY 2025–26") },
+                        isError       = titleError,
+                        supportingText = if (titleError) {
+                            { Text("Title cannot be empty", color = MaterialTheme.colorScheme.error) }
+                        } else null,
+                        singleLine    = true,
+                        modifier      = Modifier.fillMaxWidth(),
+                        colors        = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor   = UniAccent,
+                            unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
+                            focusedLabelColor    = UniAccent
+                        )
+                    )
+                    OutlinedTextField(
+                        value         = newContent,
+                        onValueChange = { newContent = it; contentError = false },
+                        label         = { Text("Content") },
+                        placeholder   = { Text("Write the announcement details here…") },
+                        isError       = contentError,
+                        supportingText = if (contentError) {
+                            { Text("Content cannot be empty", color = MaterialTheme.colorScheme.error) }
+                        } else null,
+                        minLines      = 4,
+                        maxLines      = 6,
+                        modifier      = Modifier.fillMaxWidth(),
+                        colors        = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor   = UniAccent,
+                            unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
+                            focusedLabelColor    = UniAccent
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        titleError   = newTitle.isBlank()
+                        contentError = newContent.isBlank()
+                        if (!titleError && !contentError) {
+                            viewModel.processIntent(
+                                DashboardIntent.AddAnnouncement(
+                                    Announcement(
+                                        title      = newTitle.trim(),
+                                        content    = newContent.trim(),
+                                        datePosted = System.currentTimeMillis(),
+                                        isRead     = false
+                                    )
+                                )
+                            )
+                            newTitle          = ""
+                            newContent        = ""
+                            showAddDialog     = false
+                            showSuccessSnackbar = true
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
+                ) {
+                    Text("Add", color = AppBackground)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddDialog = false
+                        newTitle      = ""
+                        newContent    = ""
+                        titleError    = false
+                        contentError  = false
+                    }
+                ) {
+                    Text("Cancel", color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    // ── MAIN SCAFFOLD ─────────────────────────────────────────────────────────
     Scaffold(
         containerColor = AppBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
