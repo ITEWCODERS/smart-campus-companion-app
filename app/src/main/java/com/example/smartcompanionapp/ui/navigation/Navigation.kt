@@ -1,13 +1,5 @@
 package com.example.smartcompanionapp.ui.navigation
 
-// ── CHANGE SUMMARY ────────────────────────────────────────────────────────────
-// The only change in this file is passing `context.applicationContext` as the
-// `context` parameter to AnnouncementRepository. This enables the repository
-// to persist notified title hashes to SharedPreferences (Bug C fix).
-//
-// No other logic changed. The full file is reproduced for completeness.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -59,16 +51,13 @@ fun AppNavigation(
     val firestore      = remember { FirebaseFirestore.getInstance() }
     val database       = remember { AppDatabase.getDatabase(context) }
 
-    val currentUserId = remember { sessionManager.getUsername() ?: "" }
+    val currentUserId = remember { sessionManager.getUserId() ?: "" }
 
     val announcementRepository = remember(currentUserId) {
         AnnouncementRepository(
             dao       = database.announcementDao(),
             firestore = firestore,
             userId    = currentUserId,
-            // KEY CHANGE: pass applicationContext so the repository can persist
-            // notifiedTitles to SharedPreferences. This survives process death
-            // and prevents re-notification of previously shown announcements.
             context   = context.applicationContext
         )
     }

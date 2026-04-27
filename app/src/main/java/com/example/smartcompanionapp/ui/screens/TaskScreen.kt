@@ -54,10 +54,6 @@ fun TaskScreen(
     navController: NavController,
     viewModel: TaskViewModel
 ) {
-    // ── STATE DRIVEN LIST RENDERING ──────────────────────────────────────────
-    // collectAsState() turns the ViewModel's StateFlow into Compose State.
-    // Every time the ViewModel emits a new TaskUiState, the UI automatically
-    // recomposes — we never manually refresh or invalidate the list.
     val uiState by viewModel.uiState.collectAsState()
 
     var showAddTaskDialog by remember { mutableStateOf(false) }
@@ -82,10 +78,6 @@ fun TaskScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ── STATE DRIVEN LIST RENDERING ───────────────────────────────────
-            // The UI reacts to the current state: Loading → show spinner,
-            // Success → show list or empty message, Error → show error text.
-            // No manual list management needed — the state drives everything.
             when (val state = uiState) {
                 is TaskUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -100,8 +92,6 @@ fun TaskScreen(
                             Text("There are no tasks yet")
                         }
                     } else {
-                        // Renders the task list from the immutable state.tasks list.
-                        // LazyColumn only recomposes items that changed.
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -112,9 +102,6 @@ fun TaskScreen(
                             items(state.tasks, key = { it.id }) { task ->
                                 TaskCard(
                                     task = task,
-                                    // ── INTENT HANDLING ───────────────────────────────────────────
-                                    // Instead of calling viewModel.deleteTask() directly,
-                                    // the UI sends a TaskIntent. The ViewModel decides what to do.
                                     onDelete = {
                                         viewModel.processIntent(TaskIntent.DeleteTask(task))
                                     },
@@ -138,14 +125,10 @@ fun TaskScreen(
             }
         }
 
-        // ── ADD TASK DIALOG ───────────────────────────────────────────────────
         if (showAddTaskDialog) {
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
                 onAddTask = { title, description, subject, date, dueDate ->
-                    // ── INTENT HANDLING ───────────────────────────────────────
-                    // Wraps all user input into a TaskIntent.AddTask and sends it
-                    // to the ViewModel. The UI has no business logic — it just fires intents.
                     viewModel.processIntent(
                         TaskIntent.AddTask(title, description, subject, date, dueDate)
                     )
@@ -154,15 +137,12 @@ fun TaskScreen(
             )
         }
 
-        // ── EDIT TASK DIALOG ──────────────────────────────────────────────────
         if (showEditTaskDialog) {
             selectedTask?.let { task ->
                 EditTaskDialog(
                     task = task,
                     onDismiss = { showEditTaskDialog = false },
                     onEditTask = { title, description, subject, date, dueDate ->
-                        // ── INTENT HANDLING ───────────────────────────────────
-                        // Wraps edit data into TaskIntent.UpdateTask.
                         viewModel.processIntent(
                             TaskIntent.UpdateTask(task, title, description, subject, date, dueDate)
                         )
@@ -174,47 +154,36 @@ fun TaskScreen(
     }
 }
 
-// ─────────────────────────────────────────────
-// DATE HELPER
-// ─────────────────────────────────────────────
-// Converts the Long milliseconds from DatePicker into a readable "dd/MM/yyyy" string
 private fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return formatter.format(Date(millis))
 }
 
-// ─────────────────────────────────────────────
-// ADD TASK DIALOG
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    // Now takes 5 parameters: title, description, subject, date, dueDate
     onAddTask: (String, String, String, String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
 
-    // ── DATE PICKER FOR DATE (scheduled/added date) ────────────────────────
     var date by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // ── DATE PICKER FOR DUE DATE (deadline) ───────────────────────────────
     var dueDate by remember { mutableStateOf("") }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
 
-    // DATE picker dialog — for the scheduled/added date
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        date = convertMillisToDate(it) // Convert millis → "dd/MM/yyyy"
+                        date = convertMillisToDate(it)
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -227,7 +196,6 @@ fun AddTaskDialog(
         }
     }
 
-    // DUE DATE picker dialog — for the deadline
     if (showDueDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDueDatePicker = false },
@@ -271,10 +239,6 @@ fun AddTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DATE ─────────────────────────────────────
-                // Read-only field — clicking the calendar icon opens the DatePicker dialog.
-                // The selected date is stored as a "dd/MM/yyyy" string in `date` state.
-                // ScheduleScreen uses this value to filter tasks for a given day.
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -290,9 +254,6 @@ fun AddTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DUE DATE ─────────────────────────────────
-                // Same pattern — opens a separate DatePicker for the deadline.
-                // This value is shown as "Due: ..." on the TaskCard.
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -311,7 +272,6 @@ fun AddTaskDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Only submit if required fields are filled
                     if (title.isNotBlank() && date.isNotBlank() && dueDate.isNotBlank()) {
                         onAddTask(title, description, subject, date, dueDate)
                     }
@@ -332,28 +292,21 @@ fun AddTaskDialog(
     )
 }
 
-// ─────────────────────────────────────────────
-// EDIT TASK DIALOG
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
     task: Task,
     onDismiss: () -> Unit,
-    // Now takes 5 parameters: title, description, subject, date, dueDate
     onEditTask: (String, String, String, String, String) -> Unit
 ) {
-    // Pre-fill all fields with the existing task's values
     var title by remember { mutableStateOf(task.title) }
     var description by remember { mutableStateOf(task.description) }
     var subject by remember { mutableStateOf(task.subject) }
 
-    // ── DATE PICKER FOR DATE ──────────────────────────────────────────────
     var date by remember { mutableStateOf(task.date) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // ── DATE PICKER FOR DUE DATE ──────────────────────────────────────────
     var dueDate by remember { mutableStateOf(task.dueDate) }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
@@ -420,7 +373,6 @@ fun EditTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DATE ─────────────────────────────────────
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -436,7 +388,6 @@ fun EditTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DUE DATE ─────────────────────────────────
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -475,11 +426,6 @@ fun EditTaskDialog(
     )
 }
 
-// ─────────────────────────────────────────────
-// TASK CARD
-// ─────────────────────────────────────────────
-// Displays a single task. Receives task data and callbacks — has no logic of its own.
-// The list of these is rendered by LazyColumn in TaskScreen based on the current UiState.
 @Composable
 fun TaskCard(
     task: Task,
@@ -502,7 +448,7 @@ fun TaskCard(
                 modifier = Modifier
                     .size(10.dp)
                     .clip(CircleShape)
-                    .background(UniAccent)
+                    .background(AuroraSoftTeal)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -525,14 +471,12 @@ fun TaskCard(
                     color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                // Shows the scheduled date (when it was added/scheduled)
                 Text(
                     text = "Starting: ${task.date}",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                // Shows the deadline
                 Text(
                     text = "Due: ${task.dueDate}",
                     style = MaterialTheme.typography.bodySmall,

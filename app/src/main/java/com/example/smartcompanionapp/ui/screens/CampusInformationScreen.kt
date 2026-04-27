@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.R
+import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 import com.example.smartcompanionapp.ui.theme.*
 
 data class Department(
@@ -63,7 +64,7 @@ fun CampusInfoScreen(navController: NavController) {
                 )
             )
         } ,
-        bottomBar = { BottomNavWithController(navController) },
+        bottomBar = { CampusBottomNav(navController) },
         containerColor = AppBackground
     ) { innerPadding ->
         LazyColumn(
@@ -138,7 +139,7 @@ fun ContactLine(icon: ImageVector, text: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = UniAccent,
+            tint = AuroraSoftTeal,
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(10.dp))

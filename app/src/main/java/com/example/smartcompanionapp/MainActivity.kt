@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,59 +20,54 @@ import com.example.smartcompanionapp.ui.navigation.AppNavigation
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.SmartCompanionAppTheme
 import com.example.smartcompanionapp.worker.AnnouncementWorkScheduler
+import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { }
+    ) { isGranted ->
+        if (isGranted) {
+            Log.d("MainActivity", "Notification permission granted")
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Request notification permission (Android 13+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this, Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
+        try {
+            // Ensure Firebase is initialized
+            FirebaseApp.initializeApp(this)
 
-        // Subscribe to FCM topic
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                android.util.Log.d("FCM", "Your Device Token: $token")
-            } else {
-                val e = task.exception
-                if (e?.message?.contains("FIS_AUTH_ERROR") == true) {
-                    android.util.Log.e("FCM", "CRITICAL ERROR: Firebase Installation Error (FIS_AUTH_ERROR). " +
-                            "FCM will NOT work on this device. Possible causes: " +
-                            "1. Device clock is wrong. " +
-                            "2. No Google Account on phone. " +
-                            "3. API Key is restricted in Google Cloud Console.")
-                } else {
-                    android.util.Log.e("FCM", "Failed to get token", e)
-                }
-            }
-        }
-
-        FirebaseMessaging.getInstance().subscribeToTopic("announcements")
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    android.util.Log.d("FCM", "Subscribed to announcements topic")
-                } else {
-                    android.util.Log.e("FCM", "Topic subscription failed", task.exception)
+            // Request notification permission (Android 13+)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(
+                        this, Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
 
-        // Start the background sync worker
-        AnnouncementWorkScheduler.schedule(this)
+            // Subscribe to FCM topic safely
+            FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("FCM", "Subscribed to announcements topic")
+                    } else {
+                        Log.e("FCM", "Topic subscription failed", task.exception)
+                    }
+                }
+
+            // Start the background sync worker safely
+            AnnouncementWorkScheduler.schedule(this)
+            
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Initialization error: ${e.message}")
+        }
 
         setContent {
             val context        = LocalContext.current
