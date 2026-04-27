@@ -13,6 +13,7 @@ composeBom = "2024.09.00"
 navigationCompose = "2.9.6"
 foundation = "1.10.1"
 room = "2.8.4"
+firebaseMessagingKtx = "25.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +37,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 # You had room-common-jvm here which is a transitive dependency, it's better to declare the ones you'll use directly.
 
 [plugins]

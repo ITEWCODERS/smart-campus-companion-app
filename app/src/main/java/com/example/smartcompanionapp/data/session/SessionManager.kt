@@ -2,6 +2,7 @@ package com.example.smartcompanionapp.data.session
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -34,6 +35,8 @@ class SessionManager(context: Context) {
             putString(KEY_USERNAME, username)
             putString(KEY_ROLE, role)
             apply()
+            // After saveSession() succeeds — subscribe this device to the topic
+            FirebaseMessaging.getInstance().subscribeToTopic("announcements")
         }
     }
 

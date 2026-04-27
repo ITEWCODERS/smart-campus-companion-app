@@ -40,6 +40,7 @@ import com.example.smartcompanionapp.ui.theme.*
 import com.example.smartcompanionapp.viewmodel.AuthState
 import com.example.smartcompanionapp.viewmodel.AuthViewModel
 import com.example.smartcompanionapp.viewmodel.DashboardViewModel
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -324,8 +325,10 @@ fun LoginScreen(
             dashboardViewModel.setAdminPrivileges(selectedRole == UserRole.ADMIN)
             // ----------------------------------------------
 
+            FirebaseMessaging.getInstance().subscribeToTopic("announcements") // ← add this
             showLoading = true
             authViewModel.resetState()
+
         }
     }
 

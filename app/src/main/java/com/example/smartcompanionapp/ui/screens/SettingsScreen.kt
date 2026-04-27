@@ -25,6 +25,7 @@ import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.navigation.CampusBottomNav
 import com.example.smartcompanionapp.ui.navigation.Screen
 import com.example.smartcompanionapp.ui.theme.*
+import com.google.firebase.messaging.FirebaseMessaging
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,10 +108,17 @@ fun SettingsScreen(navController: NavController) {
                     icon = Icons.AutoMirrored.Rounded.Logout,
                     title = "Log out",
                     onClick = {
-                        sessionManager.clearSession()
-                        navController.navigate(Screen.GetStarted.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
+//                        sessionManager.clearSession()
+//                        navController.navigate(Screen.GetStarted.route) {
+//                            popUpTo(0) { inclusive = true }
+//                        }
+                        FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
+                            .addOnCompleteListener {
+                                sessionManager.clearSession()
+                                navController.navigate(Screen.GetStarted.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
                     }
                 )
             }
