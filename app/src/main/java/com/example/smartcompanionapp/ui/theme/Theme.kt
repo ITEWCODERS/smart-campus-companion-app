@@ -15,28 +15,28 @@ private val DarkColorScheme = darkColorScheme(
     primary = AuroraVividPurple,
     secondary = AuroraSoftTeal,
     tertiary = AuroraDeepIndigo,
-    background = Color(0xFF0F051D), // Very deep indigo for dark mode
+    background = Color(0xFF0F051D), 
     surface = Color(0xFF1B0D33),
     onPrimary = Color.White,
     onSecondary = AuroraDeepIndigo,
     onTertiary = Color.White,
-    onBackground = Color.White,
-    onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFB0B0B0)
+    onBackground = Color.White,       // PART 3: Force pure white for visibility
+    onSurface = Color.White,          // PART 3: Force pure white for visibility
+    onSurfaceVariant = Color(0xFFE0E0E0) // Bright grey for secondary text
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = AuroraVividPurple,
     secondary = AuroraSoftTeal,
     tertiary = AuroraDeepIndigo,
-    background = Color(0xFFFBF9FF), // Very soft purple-white background
+    background = Color(0xFFFBF9FF),
     surface = Color.White,
     onPrimary = Color.White,
     onSecondary = AuroraDeepIndigo,
     onTertiary = Color.White,
-    onBackground = TextBlack,
-    onSurface = TextBlack,
-    onSurfaceVariant = TextGray
+    onBackground = TextBlackStatic,
+    onSurface = TextBlackStatic,
+    onSurfaceVariant = TextGrayStatic
 )
 
 @Composable

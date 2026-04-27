@@ -63,10 +63,8 @@ fun DashboardScreen(
     val sessionManager = remember { SessionManager(context) }
     val username = sessionManager.getUsername() ?: "User"
 
-    // Animation state to trigger staggered entrance
     var startAnimation by remember { mutableStateOf(false) }
     
-    // Trigger animation after the first composition or when loading finishes
     LaunchedEffect(state.isLoading) {
         if (!state.isLoading) {
             startAnimation = true
@@ -84,7 +82,6 @@ fun DashboardScreen(
             contentPadding = PaddingValues(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // 1. Header Section
             item {
                 AnimatedEntrance(visible = startAnimation, delay = 100) {
                     Box(
@@ -103,7 +100,6 @@ fun DashboardScreen(
                 }
             }
 
-            // 2. Banner
             item {
                 AnimatedVisibility(
                     visible = state.topAnnouncement != null && startAnimation,
@@ -121,13 +117,10 @@ fun DashboardScreen(
                 }
             }
 
-            // 3. Upcoming Task Card (Smart Deadline Sorting)
             item {
                 AnimatedEntrance(visible = startAnimation, delay = 300) {
                     Box(modifier = Modifier.padding(horizontal = 24.dp)) {
                         val tasks = (taskState as? TaskUiState.Success)?.tasks ?: emptyList()
-                        
-                        // Smart Sorting: Filter future deadlines and find the closest one
                         val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
                         val today = LocalDate.now()
                         
@@ -148,7 +141,6 @@ fun DashboardScreen(
                 }
             }
 
-            // 4. Campus News Section
             item {
                 AnimatedEntrance(visible = startAnimation, delay = 400) {
                     Column {
@@ -159,7 +151,6 @@ fun DashboardScreen(
                 }
             }
 
-            // 5. Deadlines Section
             item {
                 AnimatedEntrance(visible = startAnimation, delay = 500) {
                     Box(modifier = Modifier.padding(horizontal = 24.dp)) {
@@ -193,15 +184,8 @@ fun DashboardScreen(
     }
 }
 
-/**
- * Reusable component for staggering the entrance of UI elements.
- */
 @Composable
-fun AnimatedEntrance(
-    visible: Boolean,
-    delay: Int = 0,
-    content: @Composable () -> Unit
-) {
+fun AnimatedEntrance(visible: Boolean, delay: Int = 0, content: @Composable () -> Unit) {
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(animationSpec = tween(durationMillis = 600, delayMillis = delay)) +
@@ -209,9 +193,7 @@ fun AnimatedEntrance(
                     initialOffsetY = { it / 2 },
                     animationSpec = tween(durationMillis = 600, delayMillis = delay)
                 )
-    ) {
-        content()
-    }
+    ) { content() }
 }
 
 @Composable
@@ -295,12 +277,7 @@ fun StudentHeader(username: String, onProfileClick: () -> Unit) {
 
 @Composable
 fun EmptyStateText(message: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 24.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
         Text(message, color = TextSecondary, fontSize = 14.sp)
     }
 }
@@ -308,9 +285,7 @@ fun EmptyStateText(message: String) {
 @Composable
 fun SectionTitle(title: String, action: String, onActionClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -320,9 +295,7 @@ fun SectionTitle(title: String, action: String, onActionClick: () -> Unit) {
             fontSize = 14.sp,
             color = AuroraVividPurple,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier
-                .clickable(onClick = onActionClick)
-                .padding(8.dp)
+            modifier = Modifier.clickable(onClick = onActionClick).padding(8.dp)
         )
     }
 }
@@ -331,14 +304,12 @@ fun SectionTitle(title: String, action: String, onActionClick: () -> Unit) {
 fun AnnouncementBanner(announcement: Announcement, onDismiss: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = AuroraSoftTeal.copy(alpha = 0.1f)),
+        colors = CardDefaults.cardColors(containerColor = AuroraVividPurple.copy(alpha = 0.15f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(Icons.Rounded.Notifications, "Alert", tint = AuroraVividPurple)
@@ -348,21 +319,21 @@ fun AnnouncementBanner(announcement: Announcement, onDismiss: () -> Unit) {
                     text = announcement.title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
-                    color = AuroraDeepIndigo,
+                    color = TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = announcement.content,
                     fontSize = 12.sp,
-                    color = AuroraDeepIndigo.copy(alpha = 0.7f),
+                    color = TextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
             IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Rounded.Close, "Dismiss", tint = AuroraDeepIndigo)
+                Icon(Icons.Rounded.Close, "Dismiss", tint = TextPrimary)
             }
         }
     }
@@ -384,8 +355,8 @@ fun AnnouncementList(newsList: List<Announcement>) {
                 category = "Campus News",
                 title = news.title,
                 date = dateString,
-                color = AuroraSoftTeal.copy(alpha = 0.1f),
-                textColor = AuroraDeepIndigo,
+                color = AuroraSoftTeal.copy(alpha = 0.15f),
+                textColor = AuroraSoftTeal,
                 modifier = Modifier.width(responsiveCardWidth)
             )
         }
@@ -414,10 +385,7 @@ fun UpcomingTaskCard(task: Task?) {
             } else {
                 Column {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            color = AuroraSoftTeal,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
+                        Surface(color = AuroraSoftTeal, shape = RoundedCornerShape(8.dp)) {
                             Text("Next Deadline", modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), color = AuroraDeepIndigo, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(task.dueDate, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
@@ -460,10 +428,7 @@ fun AnnouncementCard(category: String, title: String, date: String, color: Color
 @Composable
 fun DeadlineItem(task: String, due: String, indicatorColor: Color) {
     Row(
-        Modifier
-            .fillMaxWidth()
-            .background(AppSurface, RoundedCornerShape(16.dp))
-            .padding(16.dp),
+        Modifier.fillMaxWidth().background(AppSurface, RoundedCornerShape(16.dp)).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(Modifier.size(12.dp).clip(CircleShape).background(indicatorColor))

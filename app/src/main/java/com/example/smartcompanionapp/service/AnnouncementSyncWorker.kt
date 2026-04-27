@@ -22,8 +22,9 @@ class AnnouncementSyncWorker(
     override suspend fun doWork(): Result {
         val sessionManager = SessionManager(context)
         
-        // STOP: Don't sync if user is not logged in
-        if (!sessionManager.isLoggedIn()) {
+        // ── PART 3 ADDITION: Master Switch Check ──────────────────────────
+        if (!sessionManager.isLoggedIn() || !sessionManager.isNotificationsEnabled()) {
+            Log.d(TAG, "Sync skipped: User logged out or notifications disabled.")
             return Result.success() 
         }
 
@@ -48,6 +49,12 @@ class AnnouncementSyncWorker(
 
             // Perform sync
             repo.syncFromFirestore()
+
+            // ── PART 3 ADDITION: Channel Specific Check ─────────────────────
+            if (!sessionManager.isAnnouncementsEnabled()) {
+                Log.d(TAG, "Announcement channel disabled. Skipping notification.")
+                return Result.success()
+            }
 
             // Fetch remote announcements again for notification diff
             val snapshot = firestore
