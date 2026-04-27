@@ -10,23 +10,26 @@ val AuroraDeepIndigo = Color(0xFF2B1055)
 val AuroraVividPurple = Color(0xFF7C3AED)
 val AuroraSoftTeal = Color(0xFF2DD4BF)
 
-// Legacy / Helper Colors (kept for compatibility if needed)
+// Legacy / Helper Colors
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
 
-// Semantic Theme Mappings
+// Semantic Theme Mappings - Properly Reactive to Dark Mode
 val AppBackground: Color @Composable get() = MaterialTheme.colorScheme.background
 val AppSurface: Color @Composable get() = MaterialTheme.colorScheme.surface
+
+// TEXT VISIBILITY FIX: Always use 'onSurface' variants so text flips to white in dark mode
 val TextPrimary: Color @Composable get() = MaterialTheme.colorScheme.onSurface
 val TextSecondary: Color @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+
 val UniPrimary: Color @Composable get() = MaterialTheme.colorScheme.primary
 val UniSecondary: Color @Composable get() = MaterialTheme.colorScheme.secondary
 
-// Background White and Text
-val BackgroundWhite = Color(0xFFFFFFFF)
-val TextBlack = Color(0xFF202124)
-val TextGray = Color(0xFF5F6368)
+// Background and Hardcoded Mappings - Made Dynamic to fix invisible text
+val BackgroundWhite @Composable get() = MaterialTheme.colorScheme.surface
+val TextBlack @Composable get() = MaterialTheme.colorScheme.onSurface 
+val TextGray @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
 
 // Aurora Gradients
 val AuroraMeshGradient = Brush.verticalGradient(
@@ -39,8 +42,8 @@ val PrimaryGradientHorizontal = Brush.horizontalGradient(
 
 // Specific Mappings for Aurora Pulse
 val CTAButtonColor = AuroraSoftTeal
-val BrandBlue = AuroraVividPurple // Replacing primary BrandBlue with Vivid Purple
-val BrandBlueLight = Color(0xFFF3E8FF) // A very soft purple for backgrounds
+val BrandBlue = AuroraVividPurple 
+val BrandBlueLight = Color(0xFFF3E8FF)
 
 // Dashboard & UI Helpers
 val AlertBg = Color(0xFFFEE2E2)
