@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Task
@@ -54,10 +55,6 @@ fun TaskScreen(
     navController: NavController,
     viewModel: TaskViewModel
 ) {
-    // ── STATE DRIVEN LIST RENDERING ──────────────────────────────────────────
-    // collectAsState() turns the ViewModel's StateFlow into Compose State.
-    // Every time the ViewModel emits a new TaskUiState, the UI automatically
-    // recomposes — we never manually refresh or invalidate the list.
     val uiState by viewModel.uiState.collectAsState()
 
     var showAddTaskDialog by remember { mutableStateOf(false) }
@@ -71,7 +68,9 @@ fun TaskScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddTaskDialog = true },
-                shape = CircleShape
+                shape = CircleShape,
+                containerColor = UniPrimary,
+                contentColor = Color.White
             ) {
                 Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
             }
@@ -82,10 +81,6 @@ fun TaskScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ── STATE DRIVEN LIST RENDERING ───────────────────────────────────
-            // The UI reacts to the current state: Loading → show spinner,
-            // Success → show list or empty message, Error → show error text.
-            // No manual list management needed — the state drives everything.
             when (val state = uiState) {
                 is TaskUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -97,24 +92,23 @@ fun TaskScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("There are no tasks yet")
+                            Text(
+                                text = "There are no tasks yet",
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     } else {
-                        // Renders the task list from the immutable state.tasks list.
-                        // LazyColumn only recomposes items that changed.
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(horizontal = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
                         ) {
                             items(state.tasks, key = { it.id }) { task ->
                                 TaskCard(
                                     task = task,
-                                    // ── INTENT HANDLING ───────────────────────────────────────────
-                                    // Instead of calling viewModel.deleteTask() directly,
-                                    // the UI sends a TaskIntent. The ViewModel decides what to do.
                                     onDelete = {
                                         viewModel.processIntent(TaskIntent.DeleteTask(task))
                                     },
@@ -131,7 +125,7 @@ fun TaskScreen(
                 is TaskUiState.Error -> {
                     Text(
                         text = state.message,
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -143,9 +137,6 @@ fun TaskScreen(
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
                 onAddTask = { title, description, subject, date, dueDate ->
-                    // ── INTENT HANDLING ───────────────────────────────────────
-                    // Wraps all user input into a TaskIntent.AddTask and sends it
-                    // to the ViewModel. The UI has no business logic — it just fires intents.
                     viewModel.processIntent(
                         TaskIntent.AddTask(title, description, subject, date, dueDate)
                     )
@@ -161,8 +152,6 @@ fun TaskScreen(
                     task = task,
                     onDismiss = { showEditTaskDialog = false },
                     onEditTask = { title, description, subject, date, dueDate ->
-                        // ── INTENT HANDLING ───────────────────────────────────
-                        // Wraps edit data into TaskIntent.UpdateTask.
                         viewModel.processIntent(
                             TaskIntent.UpdateTask(task, title, description, subject, date, dueDate)
                         )
@@ -177,7 +166,6 @@ fun TaskScreen(
 // ─────────────────────────────────────────────
 // DATE HELPER
 // ─────────────────────────────────────────────
-// Converts the Long milliseconds from DatePicker into a readable "dd/MM/yyyy" string
 private fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return formatter.format(Date(millis))
@@ -190,31 +178,27 @@ private fun convertMillisToDate(millis: Long): String {
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    // Now takes 5 parameters: title, description, subject, date, dueDate
     onAddTask: (String, String, String, String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
 
-    // ── DATE PICKER FOR DATE (scheduled/added date) ────────────────────────
     var date by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // ── DATE PICKER FOR DUE DATE (deadline) ───────────────────────────────
     var dueDate by remember { mutableStateOf("") }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
 
-    // DATE picker dialog — for the scheduled/added date
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        date = convertMillisToDate(it) // Convert millis → "dd/MM/yyyy"
+                        date = convertMillisToDate(it)
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -227,7 +211,6 @@ fun AddTaskDialog(
         }
     }
 
-    // DUE DATE picker dialog — for the deadline
     if (showDueDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDueDatePicker = false },
@@ -270,11 +253,6 @@ fun AddTaskDialog(
                     label = { Text("Subject") }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // ── DATE PICKER FOR DATE ─────────────────────────────────────
-                // Read-only field — clicking the calendar icon opens the DatePicker dialog.
-                // The selected date is stored as a "dd/MM/yyyy" string in `date` state.
-                // ScheduleScreen uses this value to filter tasks for a given day.
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -289,10 +267,6 @@ fun AddTaskDialog(
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // ── DATE PICKER FOR DUE DATE ─────────────────────────────────
-                // Same pattern — opens a separate DatePicker for the deadline.
-                // This value is shown as "Due: ..." on the TaskCard.
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -311,7 +285,6 @@ fun AddTaskDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Only submit if required fields are filled
                     if (title.isNotBlank() && date.isNotBlank() && dueDate.isNotBlank()) {
                         onAddTask(title, description, subject, date, dueDate)
                     }
@@ -340,20 +313,16 @@ fun AddTaskDialog(
 fun EditTaskDialog(
     task: Task,
     onDismiss: () -> Unit,
-    // Now takes 5 parameters: title, description, subject, date, dueDate
     onEditTask: (String, String, String, String, String) -> Unit
 ) {
-    // Pre-fill all fields with the existing task's values
     var title by remember { mutableStateOf(task.title) }
     var description by remember { mutableStateOf(task.description) }
     var subject by remember { mutableStateOf(task.subject) }
 
-    // ── DATE PICKER FOR DATE ──────────────────────────────────────────────
     var date by remember { mutableStateOf(task.date) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // ── DATE PICKER FOR DUE DATE ──────────────────────────────────────────
     var dueDate by remember { mutableStateOf(task.dueDate) }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
@@ -419,8 +388,6 @@ fun EditTaskDialog(
                     label = { Text("Subject") }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // ── DATE PICKER FOR DATE ─────────────────────────────────────
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -435,8 +402,6 @@ fun EditTaskDialog(
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                // ── DATE PICKER FOR DUE DATE ─────────────────────────────────
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -478,8 +443,6 @@ fun EditTaskDialog(
 // ─────────────────────────────────────────────
 // TASK CARD
 // ─────────────────────────────────────────────
-// Displays a single task. Receives task data and callbacks — has no logic of its own.
-// The list of these is rendered by LazyColumn in TaskScreen based on the current UiState.
 @Composable
 fun TaskCard(
     task: Task,
@@ -490,78 +453,156 @@ fun TaskCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(UniAccent)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = task.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = task.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = task.subject,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                // Shows the scheduled date (when it was added/scheduled)
-                Text(
-                    text = "Starting: ${task.date}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                // Shows the deadline
-                Text(
-                    text = "Due: ${task.dueDate}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
+        Column(modifier = Modifier.fillMaxWidth()) {
+
+            // ── HEADER SECTION ────────────────────────────────────────────────
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                // A very subtle dynamic tint that perfectly adapts to Dark & Light mode
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {
-                            menuExpanded = false
-                            onEdit()
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) }
+                    // Accent Dot
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(UniAccent)
                     )
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {
-                            menuExpanded = false
-                            onDelete()
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null) }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Title & Subject Group
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = task.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (task.subject.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = task.subject,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextSecondary,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Due Date Pill Badge
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = UniAccent.copy(alpha = 0.15f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Flag,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = UniAccent
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = task.dueDate,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = UniAccent,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Options Menu
+                    Box {
+                        IconButton(
+                            onClick = { menuExpanded = true },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = "Menu",
+                                tint = TextSecondary
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                            containerColor = AppSurface
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit", color = TextPrimary) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEdit()
+                                },
+                                leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null, tint = TextPrimary) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDelete()
+                                },
+                                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── BODY SECTION ──────────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Description (if present)
+                if (task.description.isNotBlank()) {
+                    Text(
+                        text = task.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Start Date (Secondary context info)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Event,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = TextSecondary.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Starts: ${task.date}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextSecondary.copy(alpha = 0.7f)
                     )
                 }
             }
