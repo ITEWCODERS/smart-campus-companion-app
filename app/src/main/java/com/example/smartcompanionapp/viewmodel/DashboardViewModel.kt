@@ -71,7 +71,7 @@ class DashboardViewModel(
                     launch {
                         repository.topUnread.collect { topItem ->
                             _state.update { current ->
-                                val shouldSetBanner = !current.bannerDismissed && current.topAnnouncement == null && topItem != null
+                                val shouldSetBanner = current.topAnnouncement == null && topItem != null
                                 current.copy(
                                     topAnnouncement = if (shouldSetBanner) topItem else current.topAnnouncement,
                                     isLoading = false
@@ -91,7 +91,7 @@ class DashboardViewModel(
             is DashboardIntent.DismissAnnouncement -> {
                 _state.update { current ->
                     if (current.topAnnouncement?.id == intent.announcementId)
-                        current.copy(topAnnouncement = null, bannerDismissed = true)
+                        current.copy(topAnnouncement = null)
                     else current
                 }
             }
@@ -130,7 +130,7 @@ class DashboardViewModel(
                         AnnouncementNotificationService.showAnnouncementNotification(getApplication(), stored)
                     }
                     FcmApiService.sendToAllUsers(getApplication(), intent.announcement.title, intent.announcement.content)
-                    _state.update { it.copy(topAnnouncement = intent.announcement, bannerDismissed = false) }
+                    _state.update { it.copy(topAnnouncement = intent.announcement) }
                 }
             }
 
