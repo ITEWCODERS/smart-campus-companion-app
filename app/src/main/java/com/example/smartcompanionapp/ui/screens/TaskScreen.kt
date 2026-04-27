@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Task
 import com.example.smartcompanionapp.domain.TaskIntent
@@ -88,7 +89,7 @@ fun TaskListHeader(taskCount: Int) {
         Spacer(modifier = Modifier.height(12.dp))
 
         // Subtle divider line
-        Divider(
+        HorizontalDivider(
             color = TextSecondary.copy(alpha = 0.2f),
             thickness = 1.dp
         )
@@ -229,12 +230,18 @@ fun AddTaskDialog(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
-
     var date by remember { mutableStateOf("") }
+    var dueDate by remember { mutableStateOf("") }
+
+    // Error states
+    var titleError by remember { mutableStateOf(false) }
+    var subjectError by remember { mutableStateOf(false) }
+    var dateError by remember { mutableStateOf(false) }
+    var dueDateError by remember { mutableStateOf(false) }
+
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    var dueDate by remember { mutableStateOf("") }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
 
@@ -245,6 +252,7 @@ fun AddTaskDialog(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
                         date = convertMillisToDate(it)
+                        dateError = false
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -264,6 +272,7 @@ fun AddTaskDialog(
                 TextButton(onClick = {
                     dueDatePickerState.selectedDateMillis?.let {
                         dueDate = convertMillisToDate(it)
+                        dueDateError = false
                     }
                     showDueDatePicker = false
                 }) { Text("OK") }
@@ -278,78 +287,130 @@ fun AddTaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Task") },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.PlaylistAdd, contentDescription = null, tint = UniPrimary)
+                Spacer(Modifier.width(8.dp))
+                Text("Create New Task")
+            }
+        },
         text = {
-            Column {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Task Title") }
+                    onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
+                    label = { Text("Task Title *") },
+                    isError = titleError,
+                    supportingText = if (titleError) { { Text("Title is required") } } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = subject,
+                    onValueChange = { subject = it; if (it.isNotBlank()) subjectError = false },
+                    label = { Text("Subject / Category *") },
+                    placeholder = { Text("e.g. Math, Research, Work") },
+                    isError = subjectError,
+                    supportingText = if (subjectError) { { Text("Subject is required") } } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") }
+                    label = { Text("Description (Optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 3,
+                    shape = RoundedCornerShape(12.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = subject,
-                    onValueChange = { subject = it },
-                    label = { Text("Subject") }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = {},
-                    label = { Text("Starting Date") },
-                    readOnly = true,
-                    trailingIcon = {
-                        Icon(
-                            Icons.Rounded.DateRange,
-                            contentDescription = "Select starting date",
-                            modifier = Modifier.clickable { showDatePicker = true }
-                        )
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = date,
+                        onValueChange = {},
+                        label = { Text("Start Date *") },
+                        readOnly = true,
+                        isError = dateError,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDatePicker = true },
+                        enabled = false, // Use clickable on modifier instead
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = if (dateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = if (dateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Rounded.DateRange, contentDescription = "Select starting date")
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-                OutlinedTextField(
-                    value = dueDate,
-                    onValueChange = {},
-                    label = { Text("Due Date (dd/MM/yyyy)") },
-                    readOnly = true,
-                    trailingIcon = {
-                        Icon(
-                            Icons.Rounded.DateRange,
-                            contentDescription = "Select due date",
-                            modifier = Modifier.clickable { showDueDatePicker = true }
-                        )
-                    }
-                )
+                    OutlinedTextField(
+                        value = dueDate,
+                        onValueChange = {},
+                        label = { Text("Due Date *") },
+                        readOnly = true,
+                        isError = dueDateError,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDueDatePicker = true },
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = if (dueDateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = if (dueDateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { showDueDatePicker = true }) {
+                                Icon(Icons.Rounded.EventAvailable, contentDescription = "Select due date")
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (title.isNotBlank() && date.isNotBlank() && dueDate.isNotBlank()) {
+                    titleError = title.isBlank()
+                    subjectError = subject.isBlank()
+                    dateError = date.isBlank()
+                    dueDateError = dueDate.isBlank()
+
+                    if (!titleError && !subjectError && !dateError && !dueDateError) {
                         onAddTask(title, description, subject, date, dueDate)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(0.45f)
             ) {
-                Text("Add", color = Color.White)
+                Text("Create", color = Color.White, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            Button(
+            TextButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = AppSurface)
+                modifier = Modifier.padding(end = 8.dp)
             ) {
-                Text("Cancel", color = TextPrimary)
+                Text("Cancel", color = TextSecondary)
             }
-        }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = AppSurface
     )
 }
 
@@ -363,12 +424,18 @@ fun EditTaskDialog(
     var title by remember { mutableStateOf(task.title) }
     var description by remember { mutableStateOf(task.description) }
     var subject by remember { mutableStateOf(task.subject) }
-
     var date by remember { mutableStateOf(task.date) }
+    var dueDate by remember { mutableStateOf(task.dueDate) }
+
+    // Error states
+    var titleError by remember { mutableStateOf(false) }
+    var subjectError by remember { mutableStateOf(false) }
+    var dateError by remember { mutableStateOf(false) }
+    var dueDateError by remember { mutableStateOf(false) }
+
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    var dueDate by remember { mutableStateOf(task.dueDate) }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
 
@@ -379,6 +446,7 @@ fun EditTaskDialog(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
                         date = convertMillisToDate(it)
+                        dateError = false
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -398,6 +466,7 @@ fun EditTaskDialog(
                 TextButton(onClick = {
                     dueDatePickerState.selectedDateMillis?.let {
                         dueDate = convertMillisToDate(it)
+                        dueDateError = false
                     }
                     showDueDatePicker = false
                 }) { Text("OK") }
@@ -412,78 +481,129 @@ fun EditTaskDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Task") },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Rounded.EditNote, contentDescription = null, tint = UniPrimary)
+                Spacer(Modifier.width(8.dp))
+                Text("Edit Task")
+            }
+        },
         text = {
-            Column {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Task Title") }
+                    onValueChange = { title = it; if (it.isNotBlank()) titleError = false },
+                    label = { Text("Task Title *") },
+                    isError = titleError,
+                    supportingText = if (titleError) { { Text("Title is required") } } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = subject,
+                    onValueChange = { subject = it; if (it.isNotBlank()) subjectError = false },
+                    label = { Text("Subject / Category *") },
+                    isError = subjectError,
+                    supportingText = if (subjectError) { { Text("Subject is required") } } else null,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") }
+                    label = { Text("Description (Optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 3,
+                    shape = RoundedCornerShape(12.dp)
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = subject,
-                    onValueChange = { subject = it },
-                    label = { Text("Subject") }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = {},
-                    label = { Text("Starting Date") },
-                    readOnly = true,
-                    trailingIcon = {
-                        Icon(
-                            Icons.Rounded.DateRange,
-                            contentDescription = "Select starting date",
-                            modifier = Modifier.clickable { showDatePicker = true }
-                        )
-                    }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = date,
+                        onValueChange = {},
+                        label = { Text("Start Date *") },
+                        readOnly = true,
+                        isError = dateError,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDatePicker = true },
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = if (dateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = if (dateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Rounded.DateRange, contentDescription = "Select starting date")
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-                OutlinedTextField(
-                    value = dueDate,
-                    onValueChange = {},
-                    label = { Text("Due Date (dd/MM/yyyy)") },
-                    readOnly = true,
-                    trailingIcon = {
-                        Icon(
-                            Icons.Rounded.DateRange,
-                            contentDescription = "Select due date",
-                            modifier = Modifier.clickable { showDueDatePicker = true }
-                        )
-                    }
-                )
+                    OutlinedTextField(
+                        value = dueDate,
+                        onValueChange = {},
+                        label = { Text("Due Date *") },
+                        readOnly = true,
+                        isError = dueDateError,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDueDatePicker = true },
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = if (dueDateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                            disabledLabelColor = if (dueDateError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = {
+                            IconButton(onClick = { showDueDatePicker = true }) {
+                                Icon(Icons.Rounded.EventAvailable, contentDescription = "Select due date")
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (title.isNotBlank() && date.isNotBlank() && dueDate.isNotBlank()) {
+                    titleError = title.isBlank()
+                    subjectError = subject.isBlank()
+                    dateError = date.isBlank()
+                    dueDateError = dueDate.isBlank()
+
+                    if (!titleError && !subjectError && !dateError && !dueDateError) {
                         onEditTask(title, description, subject, date, dueDate)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = UniPrimary),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(0.45f)
             ) {
-                Text("Save", color = Color.White)
+                Text("Save", color = Color.White, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
-            Button(
+            TextButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = AppSurface)
+                modifier = Modifier.padding(end = 8.dp)
             ) {
-                Text("Cancel", color = TextPrimary)
+                Text("Cancel", color = TextSecondary)
             }
-        }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = AppSurface
     )
 }
 
