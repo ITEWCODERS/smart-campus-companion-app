@@ -20,10 +20,16 @@ class AnnouncementSyncWorker(
     private val TAG = "AnnouncementSyncWorker"
 
     override suspend fun doWork(): Result {
-        return try {
-            // FALLBACK CHANGE: use "" consistently
-            val userId = SessionManager(context).getUsername() ?: ""
+        val sessionManager = SessionManager(context)
+        
+        // STOP: Don't sync if user is not logged in
+        if (!sessionManager.isLoggedIn()) {
+            return Result.success() 
+        }
 
+        val userId = sessionManager.getUserId() ?: ""
+
+        return try {
             val db        = AppDatabase.getDatabase(context)
             val dao       = db.announcementDao()
             val firestore = FirebaseFirestore.getInstance()
@@ -44,7 +50,6 @@ class AnnouncementSyncWorker(
             repo.syncFromFirestore()
 
             // Fetch remote announcements again for notification diff
-            // (Mirroring repo internal logic but ensuring we have Room IDs)
             val snapshot = firestore
                 .collection("announcements")
                 .orderBy("datePosted", Query.Direction.DESCENDING)
@@ -64,12 +69,9 @@ class AnnouncementSyncWorker(
                 )
             }
 
-            // Truly new = not in Room AND not already notified
             val trulyNew = remoteAnnouncements.filter {
                 it.title !in existingTitles && !repo.isAlreadyNotified(it.title)
             }
-
-            Log.d(TAG, "Worker: found ${trulyNew.size} new items")
 
             if (trulyNew.isNotEmpty()) {
                 if (trulyNew.size <= 3) {

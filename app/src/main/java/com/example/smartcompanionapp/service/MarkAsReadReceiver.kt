@@ -7,10 +7,10 @@ import android.content.Intent
 import android.util.Log
 import com.example.smartcompanionapp.data.database.announcement.AppDatabase
 import com.example.smartcompanionapp.data.session.SessionManager
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-
 
 class MarkAsReadReceiver : BroadcastReceiver() {
 
@@ -20,53 +20,62 @@ class MarkAsReadReceiver : BroadcastReceiver() {
         val announcementId    = intent.getIntExtra("announcement_id", -1)
         val announcementTitle = intent.getStringExtra("announcement_title")
 
-        Log.d(TAG, "Mark as read: id=$announcementId title=$announcementTitle")
+        Log.d(TAG, "Mark as read triggered: id=$announcementId title=$announcementTitle")
 
         val pendingResult = goAsync()
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // FALLBACK CHANGE: use "" consistently as the empty userId
-                val userId = SessionManager(context).getUsername() ?: ""
+                val sessionManager = SessionManager(context)
+                val userId = sessionManager.getUserId() ?: ""
                 val dao    = AppDatabase.getDatabase(context).announcementDao()
-                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                        as NotificationManager
+                val firestore = FirebaseFirestore.getInstance()
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+                suspend fun updateCloudState(title: String) {
+                    if (userId.isNotEmpty()) {
+                        try {
+                            firestore.collection("users").document(userId)
+                                .collection("read_announcements")
+                                .document(title)
+                                .set(mapOf("read" to true, "timestamp" to System.currentTimeMillis()))
+                            Log.d(TAG, "Successfully synced read state to Cloud for: $title")
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Cloud sync failed", e)
+                        }
+                    }
+                }
 
                 when {
-                    // Path 1: we have a valid Room ID
+                    // Scenario 1: We have the internal Room ID
                     announcementId != -1 -> {
                         dao.markAsRead(announcementId, userId)
-                        Log.d(TAG, "Marked id=$announcementId as read")
-
-                        // Cancel using title hash (standard ID used by all services)
                         val stored = dao.getById(announcementId, userId)
                         if (stored != null) {
-                            val notifId = AnnouncementNotificationService.stableId(stored.title)
-                            manager.cancel(notifId)
-                            Log.d(TAG, "Cancelled notification id=$notifId")
+                            updateCloudState(stored.title)
+                            manager.cancel(AnnouncementNotificationService.stableId(stored.title))
                         }
                     }
 
-                    // Path 2: we only have a title (e.g. FCM path)
+                    // Scenario 2: We only have the Title (e.g., FCM tray notification)
                     announcementTitle != null -> {
                         val stored = dao.getByTitle(announcementTitle, userId)
                         if (stored != null) {
                             dao.markAsRead(stored.id, userId)
+                            updateCloudState(stored.title)
+                        } else {
+                            // Even if not in Room yet, mark as read in Cloud to prevent it showing as NEW later
+                            updateCloudState(announcementTitle)
                         }
-                        val notifId = AnnouncementNotificationService.stableId(announcementTitle)
-                        manager.cancel(notifId)
-                        Log.d(TAG, "Cancelled notification id=$notifId (title path)")
+                        manager.cancel(AnnouncementNotificationService.stableId(announcementTitle))
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error in MarkAsReadReceiver", e)
             } finally {
                 pendingResult.finish()
+                Log.d(TAG, "MarkAsReadReceiver finished")
             }
         }
     }
-
-    /**
-     * Replaced by AnnouncementNotificationService.stableId() to ensure consistency.
-     */
 }

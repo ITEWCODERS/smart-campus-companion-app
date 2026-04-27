@@ -132,7 +132,6 @@ fun TaskScreen(
             }
         }
 
-        // ── ADD TASK DIALOG ───────────────────────────────────────────────────
         if (showAddTaskDialog) {
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
@@ -145,7 +144,6 @@ fun TaskScreen(
             )
         }
 
-        // ── EDIT TASK DIALOG ──────────────────────────────────────────────────
         if (showEditTaskDialog) {
             selectedTask?.let { task ->
                 EditTaskDialog(
@@ -171,9 +169,6 @@ private fun convertMillisToDate(millis: Long): String {
     return formatter.format(Date(millis))
 }
 
-// ─────────────────────────────────────────────
-// ADD TASK DIALOG
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
@@ -253,6 +248,7 @@ fun AddTaskDialog(
                     label = { Text("Subject") }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -267,6 +263,7 @@ fun AddTaskDialog(
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -305,9 +302,6 @@ fun AddTaskDialog(
     )
 }
 
-// ─────────────────────────────────────────────
-// EDIT TASK DIALOG
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
@@ -388,6 +382,7 @@ fun EditTaskDialog(
                     label = { Text("Subject") }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -402,6 +397,7 @@ fun EditTaskDialog(
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -457,116 +453,48 @@ fun TaskCard(
         colors = CardDefaults.cardColors(containerColor = AppSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-
-            // ── HEADER SECTION ────────────────────────────────────────────────
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                // A very subtle dynamic tint that perfectly adapts to Dark & Light mode
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Accent Dot
-                    Box(
-                        modifier = Modifier
-                            .size(12.dp)
-                            .clip(CircleShape)
-                            .background(UniAccent)
-                    )
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    // Title & Subject Group
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = task.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (task.subject.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = task.subject,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextSecondary,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Due Date Pill Badge
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = UniAccent.copy(alpha = 0.15f)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Flag,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = UniAccent
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = task.dueDate,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = UniAccent,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // Options Menu
-                    Box {
-                        IconButton(
-                            onClick = { menuExpanded = true },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreVert,
-                                contentDescription = "Menu",
-                                tint = TextSecondary
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                            containerColor = AppSurface
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Edit", color = TextPrimary) },
-                                onClick = {
-                                    menuExpanded = false
-                                    onEdit()
-                                },
-                                leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null, tint = TextPrimary) }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
-                                onClick = {
-                                    menuExpanded = false
-                                    onDelete()
-                                },
-                                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
-                            )
-                        }
-                    }
-                }
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(AuroraSoftTeal)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = task.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = task.subject,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Starting: ${task.date}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Due: ${task.dueDate}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
             }
 
             // ── BODY SECTION ──────────────────────────────────────────────────
