@@ -24,7 +24,6 @@ fun NotificationsScreen(navController: NavController) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
-    // Part 1: Initialize states from persistent storage
     var announcements by remember { mutableStateOf(sessionManager.isAnnouncementsEnabled()) }
     var deadlines by remember { mutableStateOf(sessionManager.isDeadlinesEnabled()) }
     var classReminders by remember { mutableStateOf(sessionManager.isClassRemindersEnabled()) }
@@ -61,10 +60,30 @@ fun NotificationsScreen(navController: NavController) {
                 )
             }
 
-            item { NotificationToggle("Campus Announcements", announcements) { announcements = it } }
-            item { NotificationToggle("Deadlines & Assignments", deadlines) { deadlines = it } }
-            item { NotificationToggle("Class Reminders", classReminders) { classReminders = it } }
-            item { NotificationToggle("Events & Activities", events) { events = it } }
+            item { 
+                NotificationToggle("Campus Announcements", announcements) { 
+                    announcements = it
+                    sessionManager.setAnnouncementsEnabled(it)
+                } 
+            }
+            item { 
+                NotificationToggle("Deadlines & Assignments", deadlines) { 
+                    deadlines = it
+                    sessionManager.setDeadlinesEnabled(it)
+                } 
+            }
+            item { 
+                NotificationToggle("Class Reminders", classReminders) { 
+                    classReminders = it
+                    sessionManager.setClassRemindersEnabled(it)
+                } 
+            }
+            item { 
+                NotificationToggle("Events & Activities", events) { 
+                    events = it
+                    sessionManager.setEventsEnabled(it)
+                } 
+            }
         }
     }
 }
@@ -79,7 +98,8 @@ private fun NotificationToggle(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp)),
-        color = AppSurface
+        color = AppSurface,
+        onClick = { onChange(!checked) }
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
