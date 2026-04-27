@@ -69,7 +69,7 @@ fun SettingsScreen(navController: NavController) {
     
     var editName by remember { mutableStateOf(name) }
     var editEmail by remember { mutableStateOf(email) }
-    var editCourse by remember { mutableStateOf(course) }
+    var editCourse by remember { mutableStateOf(course ?: "") }
 
     val rotation by animateFloatAsState(
         targetValue = if (isProfileExpanded) 180f else 0f,
@@ -216,7 +216,7 @@ fun SettingsScreen(navController: NavController) {
                                 } else {
                                     ProfileInfoRow(Icons.Rounded.Email, "Email Address", email)
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    ProfileInfoRow(Icons.Rounded.School, "Academic Course", course)
+                                    ProfileInfoRow(Icons.Rounded.School, "Academic Course", course ?: "Not set")
                                     Spacer(modifier = Modifier.height(12.dp))
                                     ProfileInfoRow(Icons.Rounded.Badge, "Role ID", "CAMPUS-${role.uppercase()}")
                                     
@@ -243,6 +243,7 @@ fun SettingsScreen(navController: NavController) {
                 SettingsCard(
                     icon = Icons.Rounded.Notifications,
                     title = "Notifications",
+                    subtitle = "Alerts & updates",
                     trailing = {
                         Switch(
                             checked = isNotificationsEnabled,
@@ -252,8 +253,7 @@ fun SettingsScreen(navController: NavController) {
                                 checkedTrackColor = UniPrimary.copy(alpha = 0.38f)
                             )
                         )
-                    }
-                    subtitle = "Alerts & updates",
+                    },
                     onClick = { navController.navigate("notifications") }
                 )
             }

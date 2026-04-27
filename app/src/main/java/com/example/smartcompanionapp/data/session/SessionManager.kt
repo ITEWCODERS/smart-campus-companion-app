@@ -50,9 +50,6 @@ class SessionManager(context: Context) {
         }
     }
 
-    fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
-    fun getUsername(): String? = prefs.getString(KEY_USERNAME, null)
-    fun getRole(): String? = prefs.getString(KEY_ROLE, null)
     fun updateProfile(username: String, email: String, course: String) {
         prefs.edit().apply {
             putString(KEY_USERNAME, username)
@@ -86,8 +83,8 @@ class SessionManager(context: Context) {
         return prefs.getString(KEY_ROLE, "user")
     }
 
-    fun getCourse(): String {
-        return prefs.getString(KEY_COURSE, "Computer Science") ?: "Computer Science"
+    fun getCourse(): String? {
+        return if (prefs.contains(KEY_COURSE)) prefs.getString(KEY_COURSE, null) else null
     }
     
     fun getUserId(): String? {

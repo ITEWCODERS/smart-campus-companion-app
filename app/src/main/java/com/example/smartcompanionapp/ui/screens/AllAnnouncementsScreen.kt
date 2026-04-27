@@ -1,6 +1,5 @@
 package com.example.smartcompanionapp.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,8 +13,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,122 +47,6 @@ fun AllAnnouncementsScreen(
     val sessionManager = remember { SessionManager(context) }
     val userRole = sessionManager.getRole()
     val isAdmin = userRole == "admin"
-
-    LaunchedEffect(showSuccessSnackbar) {
-        if (showSuccessSnackbar) {
-            snackbarHostState.showSnackbar("Announcement added successfully!")
-            showSuccessSnackbar = false
-        }
-    }
-
-    // ── ADD ANNOUNCEMENT DIALOG ───────────────────────────────────────────────
-    if (showAddDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showAddDialog = false
-                newTitle      = ""
-                newContent    = ""
-                titleError    = false
-                contentError  = false
-            },
-            containerColor = AppSurface,
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Rounded.AddAlert,
-                        contentDescription = null,
-                        tint     = UniAccent,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "New Announcement",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary
-                    )
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
-                        value         = newTitle,
-                        onValueChange = { newTitle = it; titleError = false },
-                        label         = { Text("Title") },
-                        placeholder   = { Text("e.g. Enrollment open for AY 2025–26") },
-                        isError       = titleError,
-                        supportingText = if (titleError) {
-                            { Text("Title cannot be empty", color = MaterialTheme.colorScheme.error) }
-                        } else null,
-                        singleLine    = true,
-                        modifier      = Modifier.fillMaxWidth(),
-                        colors        = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor   = UniAccent,
-                            unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
-                            focusedLabelColor    = UniAccent
-                        )
-                    )
-                    OutlinedTextField(
-                        value         = newContent,
-                        onValueChange = { newContent = it; contentError = false },
-                        label         = { Text("Content") },
-                        placeholder   = { Text("Write the announcement details here…") },
-                        isError       = contentError,
-                        supportingText = if (contentError) {
-                            { Text("Content cannot be empty", color = MaterialTheme.colorScheme.error) }
-                        } else null,
-                        minLines      = 4,
-                        maxLines      = 6,
-                        modifier      = Modifier.fillMaxWidth(),
-                        colors        = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor   = UniAccent,
-                            unfocusedBorderColor = TextSecondary.copy(alpha = 0.4f),
-                            focusedLabelColor    = UniAccent
-                        )
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        titleError   = newTitle.isBlank()
-                        contentError = newContent.isBlank()
-                        if (!titleError && !contentError) {
-                            viewModel.processIntent(
-                                DashboardIntent.AddAnnouncement(
-                                    Announcement(
-                                        title      = newTitle.trim(),
-                                        content    = newContent.trim(),
-                                        datePosted = System.currentTimeMillis(),
-                                        isRead     = false
-                                    )
-                                )
-                            )
-                            newTitle          = ""
-                            newContent        = ""
-                            showAddDialog     = false
-                            showSuccessSnackbar = true
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = UniPrimary)
-                ) {
-                    Text("Add", color = AppBackground)
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showAddDialog = false
-                        newTitle      = ""
-                        newContent    = ""
-                        titleError    = false
-                        contentError  = false
-                    }
-                ) {
-                    Text("Cancel", color = TextSecondary)
-                }
-            }
-        )
-    }
 
     // ── MAIN SCAFFOLD ─────────────────────────────────────────────────────────
     Scaffold(
@@ -274,30 +155,45 @@ fun AddAnnouncementBottomSheet(
                 .padding(bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Post New Announcement", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Post New Announcement", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
 
             OutlinedTextField(
                 value = title, onValueChange = { title = it },
                 label = { Text("Announcement Title") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedLabelColor = AuroraVividPurple,
+                    unfocusedLabelColor = TextSecondary
+                )
             )
 
             OutlinedTextField(
                 value = content, onValueChange = { content = it },
                 label = { Text("Details") },
                 modifier = Modifier.fillMaxWidth().height(150.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary,
+                    focusedLabelColor = AuroraVividPurple,
+                    unfocusedLabelColor = TextSecondary
+                )
             )
 
             Button(
                 onClick = { if (title.isNotBlank() && content.isNotBlank()) onPost(title, content) },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AuroraVividPurple),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AuroraVividPurple,
+                    contentColor = Color.White
+                ),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Text("Broadcast to Students", fontWeight = FontWeight.Bold)
+                Text("Broadcast to Students", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }

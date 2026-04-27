@@ -48,6 +48,54 @@ fun TaskTopBar(onBackClick: () -> Unit) {
 }
 
 // ─────────────────────────────────────────────
+// TASK LIST HEADER (IMPROVED UI)
+// ─────────────────────────────────────────────
+@Composable
+fun TaskListHeader(taskCount: Int) {
+    val currentDate = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Column {
+                Text(
+                    text = "Today",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = currentDate,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary
+                )
+            }
+            Text(
+                text = "$taskCount ${if (taskCount == 1) "Item" else "Items"}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = UniPrimary,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Subtle divider line
+        Divider(
+            color = TextSecondary.copy(alpha = 0.2f),
+            thickness = 1.dp
+        )
+    }
+}
+
+// ─────────────────────────────────────────────
 // MAIN TASK SCREEN
 // ─────────────────────────────────────────────
 @Composable
@@ -104,8 +152,11 @@ fun TaskScreen(
                                 .fillMaxSize()
                                 .padding(horizontal = 20.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp),
-                            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
+                            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)
                         ) {
+                            item {
+                                TaskListHeader(taskCount = state.tasks.size)
+                            }
                             items(state.tasks, key = { it.id }) { task ->
                                 TaskCard(
                                     task = task,
@@ -437,7 +488,20 @@ fun EditTaskDialog(
 }
 
 // ─────────────────────────────────────────────
-// TASK CARD
+// HELPER FUNCTION FOR CATEGORY COLOR
+// ─────────────────────────────────────────────
+private fun getCategoryColor(category: String): Color {
+    return when (category.lowercase()) {
+        "work" -> Color(0xFF4A90E2) // Blue
+        "fun" -> Color(0xFFE67E22) // Orange
+        "home" -> Color(0xFF27AE60) // Green
+        "important" -> Color(0xFFE74C3C) // Red
+        else -> AuroraSoftTeal
+    }
+}
+
+// ─────────────────────────────────────────────
+// TASK CARD (IMPROVED UI WITH CATEGORY CHIPS & BADGES)
 // ─────────────────────────────────────────────
 @Composable
 fun TaskCard(
@@ -447,90 +511,193 @@ fun TaskCard(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
+    // Determine category text and importance flag
+    val categoryText = if (task.subject.isNotBlank()) task.subject else "General"
+    val isImportant = task.subject.equals("Important", ignoreCase = true) ||
+            task.title.contains("Important", ignoreCase = true)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(AuroraSoftTeal)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = task.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold
+            // ── HEADER SECTION ────────────────────────────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                // Category color indicator bar (subtle accent)
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(getCategoryColor(categoryText))
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Title and metadata
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = task.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Chips row
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Category Chip
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = getCategoryColor(categoryText).copy(alpha = 0.12f),
+                            modifier = Modifier
+                        ) {
+                            Text(
+                                text = categoryText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = getCategoryColor(categoryText),
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+
+                        // Important Badge (if applicable)
+                        if (isImportant) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFFE74C3C).copy(alpha = 0.12f),
+                                modifier = Modifier
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.PriorityHigh,
+                                        contentDescription = "Important",
+                                        modifier = Modifier.size(12.dp),
+                                        tint = Color(0xFFE74C3C)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Important",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFFE74C3C),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Options Menu
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Rounded.MoreVert,
+                            contentDescription = "Options",
+                            tint = TextSecondary
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                menuExpanded = false
+                                onEdit()
+                            },
+                            leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = "Edit") }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                            onClick = {
+                                menuExpanded = false
+                                onDelete()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Rounded.Delete,
+                                    contentDescription = "Delete",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            // ── BODY SECTION (Description) ─────────────────────────────────────
+            if (task.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = task.description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = task.subject,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Starting: ${task.date}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Due: ${task.dueDate}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = TextSecondary,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 16.dp)
                 )
             }
 
-            // ── BODY SECTION ──────────────────────────────────────────────────
-            Column(
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── FOOTER SECTION (Dates) ────────────────────────────────────────
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(start = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Description (if present)
-                if (task.description.isNotBlank()) {
-                    Text(
-                        text = task.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                // Start Date (Secondary context info)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                // Start Date
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Rounded.Event,
-                        contentDescription = null,
+                        contentDescription = "Start date",
                         modifier = Modifier.size(16.dp),
                         tint = TextSecondary.copy(alpha = 0.7f)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Starts: ${task.date}",
+                        text = task.date,
                         style = MaterialTheme.typography.labelMedium,
                         color = TextSecondary.copy(alpha = 0.7f)
+                    )
+                }
+
+                // Due Date with divider
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.DateRange,
+                        contentDescription = "Due date",
+                        modifier = Modifier.size(16.dp),
+                        tint = if (isImportant) Color(0xFFE74C3C) else TextPrimary
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Due: ${task.dueDate}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isImportant) Color(0xFFE74C3C) else TextPrimary,
+                        fontWeight = if (isImportant) FontWeight.Bold else FontWeight.Medium
                     )
                 }
             }
