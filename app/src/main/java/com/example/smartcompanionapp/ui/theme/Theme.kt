@@ -20,9 +20,9 @@ private val DarkColorScheme = darkColorScheme(
     onPrimary = Color.White,
     onSecondary = AuroraDeepIndigo,
     onTertiary = Color.White,
-    onBackground = Color(0xFFFFFFFF), // PART 3: Pure white for maximum visibility
-    onSurface = Color(0xFFFFFFFF),    // PART 3: Pure white for maximum visibility
-    onSurfaceVariant = Color(0xFFE0E0E0) // Lighter grey for subtext
+    onBackground = Color.White,       // PART 3: Force pure white for visibility
+    onSurface = Color.White,          // PART 3: Force pure white for visibility
+    onSurfaceVariant = Color(0xFFE0E0E0) // Bright grey for secondary text
 )
 
 private val LightColorScheme = lightColorScheme(
