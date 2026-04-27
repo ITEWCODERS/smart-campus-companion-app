@@ -1,7 +1,9 @@
 package com.example.smartcompanionapp.data.model
 
 enum class UserRole {
-    ADMIN, USER
+    ADMIN, USER;
+
+
 }
 
 data class User(

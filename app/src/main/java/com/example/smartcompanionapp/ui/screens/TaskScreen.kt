@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.smartcompanionapp.data.model.Task
@@ -54,10 +55,6 @@ fun TaskScreen(
     navController: NavController,
     viewModel: TaskViewModel
 ) {
-    // ── STATE DRIVEN LIST RENDERING ──────────────────────────────────────────
-    // collectAsState() turns the ViewModel's StateFlow into Compose State.
-    // Every time the ViewModel emits a new TaskUiState, the UI automatically
-    // recomposes — we never manually refresh or invalidate the list.
     val uiState by viewModel.uiState.collectAsState()
 
     var showAddTaskDialog by remember { mutableStateOf(false) }
@@ -71,7 +68,9 @@ fun TaskScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddTaskDialog = true },
-                shape = CircleShape
+                shape = CircleShape,
+                containerColor = UniPrimary,
+                contentColor = Color.White
             ) {
                 Icon(Icons.Rounded.AddTask, contentDescription = "Add Task")
             }
@@ -82,10 +81,6 @@ fun TaskScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // ── STATE DRIVEN LIST RENDERING ───────────────────────────────────
-            // The UI reacts to the current state: Loading → show spinner,
-            // Success → show list or empty message, Error → show error text.
-            // No manual list management needed — the state drives everything.
             when (val state = uiState) {
                 is TaskUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -97,24 +92,23 @@ fun TaskScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("There are no tasks yet")
+                            Text(
+                                text = "There are no tasks yet",
+                                color = TextSecondary,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     } else {
-                        // Renders the task list from the immutable state.tasks list.
-                        // LazyColumn only recomposes items that changed.
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(horizontal = 20.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(top = 12.dp, bottom = 24.dp)
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
                         ) {
                             items(state.tasks, key = { it.id }) { task ->
                                 TaskCard(
                                     task = task,
-                                    // ── INTENT HANDLING ───────────────────────────────────────────
-                                    // Instead of calling viewModel.deleteTask() directly,
-                                    // the UI sends a TaskIntent. The ViewModel decides what to do.
                                     onDelete = {
                                         viewModel.processIntent(TaskIntent.DeleteTask(task))
                                     },
@@ -131,21 +125,17 @@ fun TaskScreen(
                 is TaskUiState.Error -> {
                     Text(
                         text = state.message,
-                        color = Color.Red,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
             }
         }
 
-        // ── ADD TASK DIALOG ───────────────────────────────────────────────────
         if (showAddTaskDialog) {
             AddTaskDialog(
                 onDismiss = { showAddTaskDialog = false },
                 onAddTask = { title, description, subject, date, dueDate ->
-                    // ── INTENT HANDLING ───────────────────────────────────────
-                    // Wraps all user input into a TaskIntent.AddTask and sends it
-                    // to the ViewModel. The UI has no business logic — it just fires intents.
                     viewModel.processIntent(
                         TaskIntent.AddTask(title, description, subject, date, dueDate)
                     )
@@ -154,15 +144,12 @@ fun TaskScreen(
             )
         }
 
-        // ── EDIT TASK DIALOG ──────────────────────────────────────────────────
         if (showEditTaskDialog) {
             selectedTask?.let { task ->
                 EditTaskDialog(
                     task = task,
                     onDismiss = { showEditTaskDialog = false },
                     onEditTask = { title, description, subject, date, dueDate ->
-                        // ── INTENT HANDLING ───────────────────────────────────
-                        // Wraps edit data into TaskIntent.UpdateTask.
                         viewModel.processIntent(
                             TaskIntent.UpdateTask(task, title, description, subject, date, dueDate)
                         )
@@ -177,44 +164,36 @@ fun TaskScreen(
 // ─────────────────────────────────────────────
 // DATE HELPER
 // ─────────────────────────────────────────────
-// Converts the Long milliseconds from DatePicker into a readable "dd/MM/yyyy" string
 private fun convertMillisToDate(millis: Long): String {
     val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return formatter.format(Date(millis))
 }
 
-// ─────────────────────────────────────────────
-// ADD TASK DIALOG
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     onDismiss: () -> Unit,
-    // Now takes 5 parameters: title, description, subject, date, dueDate
     onAddTask: (String, String, String, String, String) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var subject by remember { mutableStateOf("") }
 
-    // ── DATE PICKER FOR DATE (scheduled/added date) ────────────────────────
     var date by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // ── DATE PICKER FOR DUE DATE (deadline) ───────────────────────────────
     var dueDate by remember { mutableStateOf("") }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
 
-    // DATE picker dialog — for the scheduled/added date
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        date = convertMillisToDate(it) // Convert millis → "dd/MM/yyyy"
+                        date = convertMillisToDate(it)
                     }
                     showDatePicker = false
                 }) { Text("OK") }
@@ -227,7 +206,6 @@ fun AddTaskDialog(
         }
     }
 
-    // DUE DATE picker dialog — for the deadline
     if (showDueDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDueDatePicker = false },
@@ -271,10 +249,6 @@ fun AddTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DATE ─────────────────────────────────────
-                // Read-only field — clicking the calendar icon opens the DatePicker dialog.
-                // The selected date is stored as a "dd/MM/yyyy" string in `date` state.
-                // ScheduleScreen uses this value to filter tasks for a given day.
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -290,9 +264,6 @@ fun AddTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DUE DATE ─────────────────────────────────
-                // Same pattern — opens a separate DatePicker for the deadline.
-                // This value is shown as "Due: ..." on the TaskCard.
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -311,7 +282,6 @@ fun AddTaskDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Only submit if required fields are filled
                     if (title.isNotBlank() && date.isNotBlank() && dueDate.isNotBlank()) {
                         onAddTask(title, description, subject, date, dueDate)
                     }
@@ -332,28 +302,21 @@ fun AddTaskDialog(
     )
 }
 
-// ─────────────────────────────────────────────
-// EDIT TASK DIALOG
-// ─────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTaskDialog(
     task: Task,
     onDismiss: () -> Unit,
-    // Now takes 5 parameters: title, description, subject, date, dueDate
     onEditTask: (String, String, String, String, String) -> Unit
 ) {
-    // Pre-fill all fields with the existing task's values
     var title by remember { mutableStateOf(task.title) }
     var description by remember { mutableStateOf(task.description) }
     var subject by remember { mutableStateOf(task.subject) }
 
-    // ── DATE PICKER FOR DATE ──────────────────────────────────────────────
     var date by remember { mutableStateOf(task.date) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
-    // ── DATE PICKER FOR DUE DATE ──────────────────────────────────────────
     var dueDate by remember { mutableStateOf(task.dueDate) }
     var showDueDatePicker by remember { mutableStateOf(false) }
     val dueDatePickerState = rememberDatePickerState()
@@ -420,7 +383,6 @@ fun EditTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DATE ─────────────────────────────────────
                 OutlinedTextField(
                     value = date,
                     onValueChange = {},
@@ -436,7 +398,6 @@ fun EditTaskDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // ── DATE PICKER FOR DUE DATE ─────────────────────────────────
                 OutlinedTextField(
                     value = dueDate,
                     onValueChange = {},
@@ -478,8 +439,6 @@ fun EditTaskDialog(
 // ─────────────────────────────────────────────
 // TASK CARD
 // ─────────────────────────────────────────────
-// Displays a single task. Receives task data and callbacks — has no logic of its own.
-// The list of these is rendered by LazyColumn in TaskScreen based on the current UiState.
 @Composable
 fun TaskCard(
     task: Task,
@@ -490,9 +449,9 @@ fun TaskCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -502,7 +461,7 @@ fun TaskCard(
                 modifier = Modifier
                     .size(10.dp)
                     .clip(CircleShape)
-                    .background(UniAccent)
+                    .background(AuroraSoftTeal)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -525,43 +484,53 @@ fun TaskCard(
                     color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                // Shows the scheduled date (when it was added/scheduled)
                 Text(
                     text = "Starting: ${task.date}",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                // Shows the deadline
                 Text(
                     text = "Due: ${task.dueDate}",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
             }
-            Box {
-                IconButton(onClick = { menuExpanded = true }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Menu")
-                }
-                DropdownMenu(
-                    expanded = menuExpanded,
-                    onDismissRequest = { menuExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {
-                            menuExpanded = false
-                            onEdit()
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) }
+
+            // ── BODY SECTION ──────────────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Description (if present)
+                if (task.description.isNotBlank()) {
+                    Text(
+                        text = task.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {
-                            menuExpanded = false
-                            onDelete()
-                        },
-                        leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null) }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Start Date (Secondary context info)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Event,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = TextSecondary.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Starts: ${task.date}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextSecondary.copy(alpha = 0.7f)
                     )
                 }
             }
