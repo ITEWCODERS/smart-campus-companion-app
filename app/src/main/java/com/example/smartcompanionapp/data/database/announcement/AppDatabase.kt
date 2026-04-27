@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.smartcompanionapp.data.database.announcement.dao.AnnouncementDao
 import com.example.smartcompanionapp.data.model.Announcement
 
-@Database(entities = [Announcement::class], version = 3, exportSchema = false)
+@Database(entities = [Announcement::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun announcementDao(): AnnouncementDao
@@ -25,7 +25,6 @@ abstract class AppDatabase : RoomDatabase() {
                 )
                     .fallbackToDestructiveMigration()
                     .build()
-
                 INSTANCE = instance
                 instance
             }
