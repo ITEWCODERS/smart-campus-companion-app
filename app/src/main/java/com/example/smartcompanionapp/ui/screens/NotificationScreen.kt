@@ -11,18 +11,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.smartcompanionapp.data.session.SessionManager
 import com.example.smartcompanionapp.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(navController: NavController) {
-    var announcements by remember { mutableStateOf(true) }
-    var deadlines by remember { mutableStateOf(true) }
-    var classReminders by remember { mutableStateOf(true) }
-    var events by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
+    // Part 1: Initialize states from persistent storage
+    var announcements by remember { mutableStateOf(sessionManager.isAnnouncementsEnabled()) }
+    var deadlines by remember { mutableStateOf(sessionManager.isDeadlinesEnabled()) }
+    var classReminders by remember { mutableStateOf(sessionManager.isClassRemindersEnabled()) }
+    var events by remember { mutableStateOf(sessionManager.isEventsEnabled()) }
 
     Scaffold(
         containerColor = AppBackground,
