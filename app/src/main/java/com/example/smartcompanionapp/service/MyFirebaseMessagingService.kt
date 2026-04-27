@@ -34,6 +34,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         Log.d(TAG, "Message received from: ${remoteMessage.from}")
 
+        // ── STEP 0: Check if notifications are enabled ─────────────────────
+        val sessionManager = SessionManager(applicationContext)
+        if (!sessionManager.isNotificationsEnabled()) {
+            Log.d(TAG, "Notifications are disabled in settings. Skipping...")
+            return
+        }
+
         // ── STEP 1: Parse payload ────────────────────────────────────────────
         val data  = remoteMessage.data
         val title = data["title"] ?: remoteMessage.notification?.title ?: "Campus Update"
@@ -47,7 +54,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         // ── STEP 3: Background Sync ──────────────────────────────────────────
         // Only trigger sync if a user is actually logged in.
-        val userId = SessionManager(applicationContext).getUsername() ?: ""
+        val userId = sessionManager.getUsername() ?: ""
         if (userId.isNotEmpty()) {
             // Use WorkManager for the database sync because it survives if 
             // this Service process is killed.

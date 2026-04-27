@@ -41,43 +41,49 @@ class MainActivity : ComponentActivity() {
         try {
             // Ensure Firebase is initialized
             FirebaseApp.initializeApp(this)
-
-        setContent {
-            val context = LocalContext.current
-            val sessionManager = remember { SessionManager(context) }
             
-            val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
-            val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState()
-            val useDarkTheme = isDarkModePref ?: isSystemInDarkTheme()
-
-            // Handle Notifications enabling/disabling reactively
-            LaunchedEffect(isNotificationsEnabled) {
-                if (isNotificationsEnabled) {
-                    FirebaseMessaging.getInstance().subscribeToTopic("announcements")
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) android.util.Log.d("FCM", "Subscribed to announcements")
-                        }
-                    AnnouncementWorkScheduler.schedule(context)
-                } else {
-                    FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) android.util.Log.d("FCM", "Unsubscribed from announcements")
-                        }
-                    AnnouncementWorkScheduler.cancel(context)
-                }
-
             // Start the background sync worker safely
             AnnouncementWorkScheduler.schedule(this)
-            
         } catch (e: Exception) {
             Log.e("MainActivity", "Initialization error: ${e.message}")
         }
 
         setContent {
-            val context        = LocalContext.current
+            val context = LocalContext.current
             val sessionManager = remember { SessionManager(context) }
-            val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState()
-            val useDarkTheme   = isDarkModePref ?: isSystemInDarkTheme()
+            
+            val isDarkModePref by sessionManager.isDarkModeFlow.collectAsState(initial = null)
+            val isNotificationsEnabled by sessionManager.isNotificationsEnabledFlow.collectAsState(initial = true)
+            val useDarkTheme = isDarkModePref ?: isSystemInDarkTheme()
+
+            // Request notification permission (Android 13+)
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.POST_NOTIFICATIONS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+            }
+
+            // Handle Notifications enabling/disabling reactively
+            LaunchedEffect(isNotificationsEnabled) {
+                if (isNotificationsEnabled == true) {
+                    FirebaseMessaging.getInstance().subscribeToTopic("announcements")
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) Log.d("FCM", "Subscribed to announcements")
+                        }
+                    AnnouncementWorkScheduler.schedule(context)
+                } else if (isNotificationsEnabled == false) {
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic("announcements")
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) Log.d("FCM", "Unsubscribed from announcements")
+                        }
+                    AnnouncementWorkScheduler.cancel(context)
+                }
+            }
 
             SmartCompanionAppTheme(darkTheme = useDarkTheme) {
                 MainApp(sessionManager)

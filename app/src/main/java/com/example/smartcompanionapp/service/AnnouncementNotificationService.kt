@@ -8,16 +8,22 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.smartcompanionapp.MainActivity
 import com.example.smartcompanionapp.R
 import com.example.smartcompanionapp.data.model.Announcement
+import com.example.smartcompanionapp.data.session.SessionManager
 
 object AnnouncementNotificationService {
 
     const val CHANNEL_ID = "campus_announcements_v2"
     private const val CHANNEL_NAME = "Campus Announcements"
     private const val CHANNEL_DESC = "New announcements from your campus"
+
+    private fun areNotificationsEnabled(context: Context): Boolean {
+        return SessionManager(context).isNotificationsEnabled()
+    }
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -44,6 +50,11 @@ object AnnouncementNotificationService {
 
     // Used by DashboardViewModel — has a real Room ID
     fun showAnnouncementNotification(context: Context, announcement: Announcement) {
+        if (!areNotificationsEnabled(context)) {
+            Log.d("NotificationService", "Notifications are disabled. Skipping notification for: ${announcement.title}")
+            return
+        }
+
         val baseId = stableId(announcement.title)
 
         val openPending = PendingIntent.getActivity(
@@ -90,6 +101,11 @@ object AnnouncementNotificationService {
 
     // Used by MyFirebaseMessagingService — title only, no Room ID yet
     fun showAnnouncementNotificationFromFcm(context: Context, title: String, body: String) {
+        if (!areNotificationsEnabled(context)) {
+            Log.d("NotificationService", "Notifications are disabled. Skipping FCM notification for: $title")
+            return
+        }
+
         val baseId = stableId(title)
 
         val openPending = PendingIntent.getActivity(
@@ -135,6 +151,8 @@ object AnnouncementNotificationService {
     }
 
     fun showSummaryNotification(context: Context, count: Int) {
+        if (!areNotificationsEnabled(context)) return
+
         val openPending = PendingIntent.getActivity(
             context,
             Int.MAX_VALUE - 1,
