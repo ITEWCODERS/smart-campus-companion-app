@@ -21,6 +21,10 @@ class SessionManager(private val context: Context) {
         private const val KEY_COURSE = "course"
         private const val KEY_DARK_MODE = "dark_mode"
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        private const val KEY_NOTIF_ANNOUNCEMENTS = "notif_announcements"
+        private const val KEY_NOTIF_DEADLINES = "notif_deadlines"
+        private const val KEY_NOTIF_CLASS = "notif_class"
+        private const val KEY_NOTIF_EVENTS = "notif_events"
         private const val KEY_PROFILE_IMAGE = "profile_image_uri"
     }
 
@@ -110,25 +114,29 @@ class SessionManager(private val context: Context) {
     }
 
     fun isNotificationsEnabled(): Boolean {
-        return prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true) // Default to true
+        return prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true) 
     }
 
+    // New methods for specific channels
+    fun isAnnouncementsEnabled(): Boolean = prefs.getBoolean(KEY_NOTIF_ANNOUNCEMENTS, true)
+    fun setAnnouncementsEnabled(enabled: Boolean) = prefs.edit().putBoolean(KEY_NOTIF_ANNOUNCEMENTS, enabled).apply()
+
+    fun isDeadlinesEnabled(): Boolean = prefs.getBoolean(KEY_NOTIF_DEADLINES, true)
+    fun setDeadlinesEnabled(enabled: Boolean) = prefs.edit().putBoolean(KEY_NOTIF_DEADLINES, enabled).apply()
+
+    fun isClassRemindersEnabled(): Boolean = prefs.getBoolean(KEY_NOTIF_CLASS, true)
+    fun setClassRemindersEnabled(enabled: Boolean) = prefs.edit().putBoolean(KEY_NOTIF_CLASS, enabled).apply()
+
+    fun isEventsEnabled(): Boolean = prefs.getBoolean(KEY_NOTIF_EVENTS, false)
+    fun setEventsEnabled(enabled: Boolean) = prefs.edit().putBoolean(KEY_NOTIF_EVENTS, enabled).apply()
+
     fun logout() {
-        // 1. Firebase Sign Out
         auth.signOut()
-        
-        // 2. Google Sign Out (Important: clears the account selection cache)
         try {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
             val googleSignInClient = GoogleSignIn.getClient(context, gso)
-            googleSignInClient.signOut().addOnCompleteListener {
-                // Optional: Clear or revoke access here if needed
-            }
-        } catch (e: Exception) {
-            // Handle silent error
-        }
-
-        // 3. Local session cleanup
+            googleSignInClient.signOut()
+        } catch (e: Exception) {}
         clearSession()
     }
 
